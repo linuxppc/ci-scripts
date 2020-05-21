@@ -1,0 +1,99 @@
+os: linux
+dist: bionic
+language: minimal
+
+services:
+  - docker
+
+env:
+  global:
+    # DOCKER_USER
+    - secure: "pbEBfjH5kqqeJ2wbLKjdgwqtUxGDPENRDSILktgVZ0DhyWjrJcW7nMDc+j3dL50jsQRlhT8ysMWrRYgAgpacRd0HNRCGWxXvphxUOl5xUel+fMojoHKrn2i3lChSIJjnFl7+Lhw6vtL0dwQux0vr5s9Ce7zmQGdqnNfF6izoMtJgRm2tGanvsBu+YS+Z7DicRuxNog/H8sPZI4eII7qHQcyy+vFpvfP737/ZDvgCZzZThnVIGyHHXBff/3af7AM3DrRrwX+90RqQV1pBcywKtJQbqbmkJvW5qsAtpfwpHqF91LVssizwNmfHChNqNs8eIJBfptAD9szQ4uAhWc4WDtqbQ3Wv1fVLfam42IfihFFO3zsAH55aDfg3W50U6eRO3CsBxJa4jYJOCO3I96cCFvKs0qn0JRYe+GaOAFxX4r2nUO3aalLTDuGZl3LxO0pJ7CguiYwPvzfac0TA4Knra79+ChMLWJoonmimv9afFFARBtyps3/QtTFtUI8YUHReDgSYwSZRdP6AJKBbeGfdjDA2Nyd+ojH2HNX7vAEbxvn+lTxyG4+JxOkm3EhTmUDqPhlwdh3Soyeg9csP5Mg9GCMBSKpPVN3zZOiZK0CnrVYX2XMhOS3pyQptVoA9xJlRHzh9RhHWqgTAtfhqkiGnW+gaf0UYVuSUa4iX+cfWVk4="
+    # DOCKER_PASSWORD
+    - secure: "Jc9fvscQRx2SlT9bS3m/pErkOmuHjqkDgz7R3fPqYaKHFL3q/7X+MrohA13AMW9OvFy38mRBD9N5p6XM49+rJFRi3G1OlTYppU7C4ErTYQDnYidd5HzXXm/9owDIDZBC/9l4ne+4wradT7KjS7GS+eHAFItqBP7Z/69BnBzOSuTWnrAFp+dO/fQRe7D9ZDMsM2bLIZ1NT4YBCTA95iW1qaRFfzAIPuPkmJrdrRZMAXykqfyUwLP0UEQ76LEqZyyzgwEmloW50ZftiIFWAVpLzsm8lVp97QDF/fTntUUS9PCHq6XqRN04sHEpiOeZWkEDQxV0PeKh7KQAoAfmNhV6k9m6xxNIHuL2Gx2ug77myVaQyWZeJXN1u7MbLgRkqysyf3XQj1BvPvAI7rVcJMMlsES3LH+LdZvIHFitcsCNXwyncWN61SyJ8U3z+0Oqum0rSh0XqQlTlGUZAcdAmUN0VDleTQF6Bt0UeB0ftbEfaeE9Nfadd0pKJIGqfHUWVqZJmG1hfy58YnuMIBq318jeX1C7R/Q4A3oB16vObthk8MmMtTbnzS6eWtVwK+fZwHNmWMNsGq8tETCqbgNx9UDdav8SvK8ZMKAkAtF0SyFjZpMIBVqRmRgrPfJt2ZOagJFcrAJb+absJhtgSQUv/mABwxO1fguhlNRaoxe+fwztBd4="
+
+
+jobs:
+  include:
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@20.04
+      name: ppc64le@ubuntu@20.04
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@19.10
+      name: ppc64le@ubuntu@19.10
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@18.04
+      name: ppc64le@ubuntu@18.04
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@16.04
+      name: ppc64le@ubuntu@16.04
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=fedora@32
+      name: ppc64le@fedora@32
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=korg@10.1.0
+      name: ppc64le@korg@10.1.0
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=korg@9.3.0
+      name: ppc64le@korg@9.3.0
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64le IMAGE=korg@5.5.0
+      name: ppc64le@korg@5.5.0
+    - os:   linux
+      arch: amd64
+      env:  SUBARCH=ppc64 IMAGE=korg@4.9.4
+      name: ppc64@korg@4.9.4
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@20.04
+      name: ppc64le@ubuntu@20.04
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@19.10
+      name: ppc64le@ubuntu@19.10
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@18.04
+      name: ppc64le@ubuntu@18.04
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@16.04
+      name: ppc64le@ubuntu@16.04
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=fedora@32
+      name: ppc64le@fedora@32
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=korg@10.1.0
+      name: ppc64le@korg@10.1.0
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=korg@9.3.0
+      name: ppc64le@korg@9.3.0
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=korg@5.5.0
+      name: ppc64le@korg@5.5.0
+    - os:   linux
+      arch: ppc64le
+      env:  SUBARCH=ppc64 IMAGE=korg@4.9.4
+      name: ppc64@korg@4.9.4
+
+script:
+  - make -C build rebuild-image@$SUBARCH@$IMAGE
+
+deploy:
+  provider: script
+  script:
+    - make -C build push-image@$SUBARCH@$IMAGE
+  on:
+    branch: deploy
