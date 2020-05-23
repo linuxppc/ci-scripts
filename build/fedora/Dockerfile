@@ -5,6 +5,7 @@ RUN dnf -y install \
         bc \
         bison \
         bzip2 \
+        ccache \
         cpio \
         diffutils \
         elfutils-libelf-devel \
