@@ -104,7 +104,6 @@ ALL_TARGETS = ${KERNEL} ${PPCTESTS} ${SELFTESTS} ${IMAGES} ${PULL_IMAGES} ${DOCS
 
 empty:=
 space:= $(empty) $(empty)
-TARGET_DISPLAY := $(subst ${space},\n  ,${ALL_TARGETS})
 
 help:
 	@echo "Build docker images and build kernel and/or selftests inside them."
@@ -139,5 +138,11 @@ help:
 	@echo " $ make selftests      # build all selftest variants"
 	@echo " $ make clean          # clean everything"
 	@echo
-	@echo "All targets:"
-	@echo -e '  ${TARGET_DISPLAY}'
+	@echo "To see all targets run:"
+	@echo " $ make show_targets"
+	@echo
+
+TARGET_DISPLAY := $(subst ${space},\n,${ALL_TARGETS})
+
+show_targets:
+	@echo -e '${TARGET_DISPLAY}'

@@ -19,6 +19,7 @@ if [[ "$task" == "image" ]]; then
         exit 0
     fi
 elif [[ "$task" == "pull-image" ]]; then
+    image="$image-$(uname -m)"
     cmd="$DOCKER pull $image"
     (set -x; $cmd)
     exit $?

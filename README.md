@@ -1,0 +1,124 @@
+linuxppc CI scripts
+===================
+
+Scripts I use to do continuous integration for linuxppc.
+
+Still (and probably always) under heavy development.
+
+Quick start
+-----------
+
+Make sure you can run docker containers.
+On Fedora the script will call `sudo docker` for you.
+
+You need a Linux source tree, which hasn't been built in. You can make sure it's
+clean with `make mrproper`, or clone a fresh tree.
+
+Clone this repo.
+
+```
+$ cd ci-scripts
+$ cd build
+$ make pull-image@ppc64le@ubuntu@20.04 
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+```
+
+This will build you a `ppc64le_defconfig` using the Ubuntu 20.04 toolchain.
+
+The kernel will be in `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/vmlinux`.
+
+For more help try `make help`.
+
+Building different defconfigs
+-----------------------------
+
+You can specify a defconfig with `DEFCONFIG`.
+
+```
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@20.04 DEFCONFIG=powernv_defconfig JFACTOR=$(nproc)
+```
+
+Note that the subarch (eg. `ppc64le`) needs to match the defconfig, so to build
+`ppc64_defconfig`, use `ppc64`.
+
+```
+$ make SRC=~/src/linux kernel@ppc64@ubuntu@20.04 DEFCONFIG=ppc64_defconfig JFACTOR=$(nproc)
+```
+
+Different toolchains
+--------------------
+
+There are images for various toolchains, they are encoded in the distro name/version.
+
+ - kernel.org gcc 10.1.0 `korg@10.1.0`
+ - kernel.org gcc 9.3.0 `korg@9.3.0`
+ - kernel.org gcc 8.1.0 `korg@8.1.0`
+ - kernel.org gcc 5.5.0 `korg@5.5.0`
+ - kernel.org gcc 4.9.4 (BE only) `korg@4.9.4`
+ - Ubuntu 20.04 `ubuntu@20.04`
+ - Ubuntu 19.10 `ubuntu@19.10`
+ - Ubuntu 18.04 `ubuntu@18.04`
+ - Ubuntu 16.04 `ubuntu@16.04`
+ - Fedora 32 `fedora@32`
+ - Fedora 31 `fedora@31`
+ 
+Only the Ubuntu toolchains can build the selftests.
+
+Building selftests
+------------------
+
+To build the kernel selftests:
+
+```
+$ make SRC=~/src/linux selftests@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+```
+
+Or just the powerpc selftests:
+
+```
+$ make SRC=~/src/linux ppctests@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+```
+
+You can also build the powerpc selftests with all available toolchains using:
+
+```
+$ make SRC=~/src/linux ppctests JFACTOR=$(nproc)
+```
+
+Other options
+-------------
+
+As mentioned above you pass the make -j factor with `JFACTOR=n`.
+
+To run sparse pass `SPARSE=1`.
+The log will be in eg. `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/sparse.log`.
+
+To build modules pass `MODULES=1`
+
+To build with clang pass `CLANG=1`, only works using the newer Ubuntu images.
+
+For a quiet build pass `QUIET=1`, for verbose pass `VERBOSE=1`.
+
+By default the script does an incremental build, ie. it doesn't clean. You can
+clean before building by passing `PRE_CLEAN=1`, or afterward with `POST_CLEAN=1`.
+
+Alternately you can clean everything with `make clean`.
+
+Multiple builds
+---------------
+
+If you have enough CPU and disk space, you can run multiple builds at once. The
+output directory is namespaced based on the subarch, distro, version, and
+defconfig.
+
+Building your own image
+-----------------------
+
+If you don't want to pull an untrusted image, you can build it yourself with:
+
+```
+$ make rebuild-image@ppc64le@ubuntu@20.04
+```
+
+Note that the build mounts the source tree read-only, so nothing it does can
+affect your source tree.
