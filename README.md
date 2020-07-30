@@ -90,8 +90,13 @@ Other options
 
 As mentioned above you pass the make -j factor with `JFACTOR=n`.
 
-To run sparse pass `SPARSE=1`.
-The log will be in eg. `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/sparse.log`.
+To run sparse use the `fedora@32` image and pass `SPARSE=1`.
+
+```
+$ make SRC=~/src/linux kernel@ppc64le@fedora@32 SPARSE=1 JFACTOR=$(nproc)
+```
+
+The log will be in eg. `output/ppc64le@fedora@32/ppc64le_defconfig/sparse.log`.
 
 To build modules pass `MODULES=1`
 

@@ -23,6 +23,7 @@ RUN dnf -y install \
         make \
         openssl-devel \
         prename \
+        sparse \
         uboot-tools \
         xz && \
     dnf clean all
