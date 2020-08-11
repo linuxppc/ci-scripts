@@ -19,9 +19,18 @@ if [[ "$task" == "image" ]]; then
         exit 0
     fi
 elif [[ "$task" == "pull-image" ]]; then
-    image="$image-$(uname -m)"
-    cmd="$DOCKER pull $image"
+    arch_image="$image-$(uname -m)"
+    cmd="$DOCKER pull $arch_image"
     (set -x; $cmd)
+
+    if [[ $? -ne 0 ]]; then
+	echo "Error: pulling $image?" >&2
+	exit $?
+    fi
+
+    cmd="$DOCKER tag $arch_image $image"
+    (set -x; $cmd)
+
     exit $?
 elif [[ "$task" == "push-image" ]]; then
     if [[ -n "$DOCKER_PASSWORD" && -n "$DOCKER_USER" ]]; then

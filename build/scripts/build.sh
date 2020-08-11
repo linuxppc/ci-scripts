@@ -59,6 +59,10 @@ if [[ -n $VERBOSE ]]; then
     cmd+="-e VERBOSE=$VERBOSE "
 fi
 
+if [[ -n $W ]]; then
+    cmd+="-e KBUILD_EXTRA_WARN=$W "
+fi
+
 if [[ -n $SPARSE ]]; then
     cmd+="-e SPARSE=$SPARSE "
 fi

@@ -22,6 +22,10 @@ if [[ -n "$KBUILD_BUILD_TIMESTAMP" ]]; then
     echo "## KBUILD_TS     = $KBUILD_BUILD_TIMESTAMP"
 fi
 
+if [[ -n "$KBUILD_EXTRA_WARN" ]]; then
+    echo "## EXTRA_WARN    = $KBUILD_EXTRA_WARN"
+fi
+
 export KBUILD_OUTPUT=/output
 
 if [[ -n "$QUIET" ]]; then
