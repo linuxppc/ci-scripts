@@ -14,6 +14,7 @@ RUN apt-get -q -y update && \
       bison \
       bsdmainutils \
       bzip2 \
+      ca-certificates \
       ccache \
       cpio \
       file \
@@ -32,13 +33,18 @@ RUN apt-get -q -y update && \
       u-boot-tools \
       rename \
       rsync \
-      sparse \
       xz-utils \
       $(/tmp/packages.sh) && \
     rm -rf /var/lib/apt/lists/* /tmp/packages.sh /var/cache/* /var/log/dpkg.log
 
 COPY ubuntu/make-links.sh /tmp/make-links.sh
 RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
+
+RUN cd /tmp && \
+    git clone https://git.kernel.org/pub/scm/devel/sparse/sparse.git && \
+    sed -i -e "s/HAVE_LLVM:=.*/HAVE_LLVM:=no/" sparse/Makefile && \
+    make -C sparse PREFIX=/usr/local install && \
+    rm -rf sparse
 
 ARG uid
 ARG gid
