@@ -100,7 +100,7 @@ The log will be in eg. `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/sparse.log
 
 To build modules pass `MODULES=1`
 
-To build with clang pass `CLANG=1`, only works using the newer Ubuntu images.
+To build with clang pass `CLANG=1`, only works using the Ubuntu `devel` images.
 
 For a quiet build pass `QUIET=1`, for verbose pass `VERBOSE=1`.
 
