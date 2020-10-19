@@ -24,10 +24,17 @@ SRC=$(realpath "$SRC")
 
 alternate_binds=$(get_alternate_binds)
 
-if [[ "$subarch" == "ppc64" ]]; then
-    cross="powerpc64-linux-gnu-"
+arch=powerpc
+if [[ "$subarch" == "ppc64le" ]]; then
+    # No cross compiler for fedora ppc64le on ppc64le
+    if [[ "$distro" != "fedora" || $(uname -m) != "ppc64le" ]]; then
+	cross="powerpc64le-linux-gnu-"
+    fi
+elif [[ "$subarch" == "x86_64" ]]; then
+    cross="x86_64-linux-gnu-"
+    arch=x86
 else
-    cross="powerpc64le-linux-gnu-"
+    cross="powerpc64-linux-gnu-"
 fi
 
 cmd="$DOCKER run --rm "
@@ -36,12 +43,13 @@ if [[ -t 0 ]]; then
     cmd+="-it "
 fi
 
+cmd+="-h $(hostname) "
 cmd+="--network none "
 cmd+="-w /linux "
 cmd+="-v $SRC:/linux:ro "
 
 cmd+="$alternate_binds "
-cmd+="-e ARCH=powerpc "
+cmd+="-e ARCH=$arch "
 
 if [[ -n $JFACTOR ]]; then
     cmd+="-e JFACTOR=$JFACTOR "
@@ -79,7 +87,9 @@ if [[ -n $MODULES ]]; then
     cmd+="-e MODULES=$MODULES "
 fi
 
-cmd+="-e CROSS_COMPILE=$cross "
+if [[ -n $cross ]]; then
+    cmd+="-e CROSS_COMPILE=$cross "
+fi
 
 if [[ -n "$KBUILD_BUILD_TIMESTAMP" ]]; then
     cmd+="-e KBUILD_BUILD_TIMESTAMP=$KBUILD_BUILD_TIMESTAMP "
@@ -109,7 +119,7 @@ if [[ -n $TARGETS ]]; then
 fi
 
 output_dir=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG")
-mkdir -p "$output_dir"
+mkdir -p "$output_dir" || exit 1
 
 cmd+="-v $output_dir:/output:rw "
 
@@ -120,6 +130,10 @@ if [[ -n "$CCACHE" ]]; then
     cmd+="-v $CCACHE:/ccache "
     cmd+="-e CCACHE_DIR=/ccache "
     cmd+="-e CCACHE=1 "
+fi
+
+if [[ -r /etc/timezone ]]; then
+    cmd+="-e TZ=$(< /etc/timezone) "
 fi
 
 if [[ -n "$DOCKER_EXTRA_ARGS" ]]; then

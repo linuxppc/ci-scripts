@@ -16,6 +16,7 @@ RUN dnf -y install \
         gcc-powerpc64-linux-gnu \
         git \
         glibc-devel \
+        glibc-static \
         hostname \
         kmod \
         lz4 \
@@ -23,6 +24,7 @@ RUN dnf -y install \
         make \
         openssl-devel \
         prename \
+        rsync \
         sparse \
         uboot-tools \
         xz && \

@@ -23,6 +23,10 @@ elif [[ "$VERSION_ID" == "19.10" ]]; then
     PACKAGES+=" gcc-9-multilib-powerpc-linux-gnu"
 elif [[ "$VERSION_ID" == "20.04" ]]; then
     PACKAGES+=" gcc-9-multilib-powerpc-linux-gnu"
+elif [[ "$VERSION_ID" == "20.10" ]]; then
+    PACKAGES+=" gcc-10-multilib-powerpc-linux-gnu"
+else
+    PACKAGES+=" crossbuild-essential-powerpc"
 fi
 
 major="${VERSION_ID%%.*}"
@@ -37,6 +41,10 @@ if [[ "$machine" == "ppc64le" ]]; then
     PACKAGES+=" libpopt-dev"
 else
     PACKAGES+=" gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu"
+fi
+
+if [[ "$machine" != "x86_64" ]]; then
+    PACKAGES+=" crossbuild-essential-amd64"
 fi
 
 echo $PACKAGES

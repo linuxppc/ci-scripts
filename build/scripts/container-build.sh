@@ -153,6 +153,12 @@ else
        cmd+=" INSTALL_PATH=/output/install install"
     fi
 
+    which dpkg-query > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        libc_version=$(dpkg-query --show --showformat='${Version}' libc6)
+        echo "## libc          = $libc_version"
+    fi
+
     if [[ -n "$PRE_CLEAN" ]]; then
         (set -x; $cmd clean)
     fi

@@ -52,14 +52,19 @@ ifeq ($(shell uname -m),x86_64)
 BE_DISTROS += korg@4.6.3
 endif
 
-SELFTEST_DISTROS := ubuntu@20.04 ubuntu@19.10 ubuntu@18.04 ubuntu@16.04
-KERNEL_DISTROS := korg@10.1.0 korg@9.3.0 korg@8.1.0 korg@5.5.0 fedora@32 fedora@31
+FEDORA_DISTROS := fedora@32 fedora@31
+SELFTEST_DISTROS := ubuntu@devel ubuntu@20.04 ubuntu@19.10 ubuntu@18.04 ubuntu@16.04
+KERNEL_DISTROS := korg@10.1.0 korg@9.3.0 korg@8.1.0 korg@5.5.0 ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@20.04
+X86_DISTRO := ubuntu@20.04
 ALL_DISTROS := ${SELFTEST_DISTROS} ${BE_DISTROS} ${KERNEL_DISTROS}
 SUBARCHES := ppc64le ppc64
 
 $(eval $(call MAIN_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 $(eval $(call DOCS_TEMPLATE,ppc64le,${DOCS_DISTRO}))
+
+$(eval $(call MAIN_TEMPLATE,x86_64,${X86_DISTRO}))
+$(eval $(call KERNEL_TEMPLATE,x86_64,${X86_DISTRO}))
 
 $(foreach distro,${BE_DISTROS}, \
 	$(eval $(call MAIN_TEMPLATE,ppc64,${distro})) \
@@ -86,6 +91,12 @@ $(foreach distro,${SELFTEST_DISTROS}, \
 		$(eval $(call SELFTESTS_TEMPLATE,${subarch},${distro})) \
 	) \
 )
+
+ifeq ($(shell uname -m),ppc64le)
+$(foreach distro,${FEDORA_DISTROS}, \
+	$(eval $(call SELFTESTS_TEMPLATE,ppc64le,${distro})) \
+)
+endif
 
 clean: ${CLEAN}
 	rm -f VERSION
