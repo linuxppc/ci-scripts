@@ -53,7 +53,7 @@ BE_DISTROS += korg@4.6.3
 endif
 
 FEDORA_DISTROS := fedora@32 fedora@31
-SELFTEST_DISTROS := ubuntu@devel ubuntu@20.04 ubuntu@19.10 ubuntu@18.04 ubuntu@16.04
+SELFTEST_DISTROS := ubuntu@devel ubuntu@20.10 ubuntu@20.04 ubuntu@18.04 ubuntu@16.04
 KERNEL_DISTROS := korg@10.1.0 korg@9.3.0 korg@8.1.0 korg@5.5.0 ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@20.04
 X86_DISTRO := ubuntu@20.04

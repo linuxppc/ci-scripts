@@ -72,7 +72,8 @@ if [[ "$1" == "kernel" ]]; then
 
         # merge_config.sh always writes its TMP files to $PWD, so we have to
         # change into /output before running it.
-        (cd /output; set -x; /linux/scripts/kconfig/merge_config.sh .config ${configs[@]})
+        (cd /output; set -x; /linux/scripts/kconfig/merge_config.sh -m .config ${configs[@]})
+        (set -x; make $verbose $quiet "$cc" olddefconfig)
     fi
 
     rc=$?
