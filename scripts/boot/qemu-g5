@@ -1,0 +1,79 @@
+#!/usr/bin/python3
+#
+# $ export ROOT_DISK_PATH=~/root-disks/
+# Expects ppc64-rootfs.cpio.gz in ROOT_DISK_PATH
+#
+# $ cd ~/src/linux
+# $ make
+# $ ~/src/ci-scripts/scripts/boot/qemu-g5
+#
+# Or:
+#
+# export VMLINUX_PATH=~/src/linux/vmlinux
+# export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
+#
+# Optional:
+# export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
+
+import logging
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import qemu_command, qemu_net_setup
+from pexpect_utils import *
+from utils import *
+
+
+def main():
+    setup_logging()
+    setup_timeout(60)
+
+    if not check_env_vars(['ROOT_DISK_PATH']):
+        return 1
+
+    expected_release = get_expected_release()
+    if expected_release is None:
+        return False
+
+    vmlinux = get_vmlinux()
+    if vmlinux is None:
+        return False
+
+    rootfs = 'ppc64-rootfs.cpio.gz'
+
+    p = PexpectHelper()
+    cmd = qemu_command(vmlinux=vmlinux, machine='mac99', rootfs=rootfs,
+		       cmdline='noreboot')
+    p.spawn(cmd, logfile=open('console.log', 'w'))
+
+    standard_boot(p)
+
+    p.send("echo -n 'booted-revision: '; uname -r")
+    p.expect(f'booted-revision: {expected_release}')
+    p.expect_prompt()
+
+    p.send('cat /proc/cpuinfo')
+    p.expect("PowerMac3,1 MacRISC MacRISC2 Power Macintosh")
+    p.expect_prompt()
+
+    qemu_net_setup(p)
+    ping_test(p)
+    wget_test(p)
+
+    p.send("halt")
+    p.expect("reboot: System halted")
+    p.send("\x01c") # invoke qemu monitor
+    p.expect("\(qemu\)")
+    p.send("quit")
+    p.wait_for_exit()
+
+    if filter_log_warnings(open('console.log'), open('warnings.txt', 'w')):
+        logging.error('Errors/warnings seen in console.log')
+        return False
+
+    logging.info('Test completed OK')
+
+    return True
+
+
+sys.exit(0 if main() else 1)

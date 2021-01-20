@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export COMPAT_USERSPACE=1
+
+exec "$(dirname "$0")"/qemu-ppc64e $@

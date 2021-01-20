@@ -27,6 +27,8 @@ elif [[ "$VERSION_ID" == "20.04" ]]; then
     fi
 elif [[ "$VERSION_ID" == "20.10" ]]; then
     PACKAGES+=" gcc-10-multilib-powerpc-linux-gnu"
+elif [[ "$VERSION_ID" == "21.04" ]]; then
+    PACKAGES+=" gcc-10-multilib-powerpc-linux-gnu"
 else
     PACKAGES+=" crossbuild-essential-powerpc"
 fi

@@ -1,0 +1,96 @@
+#!/usr/bin/python3
+#
+# $ export ROOT_DISK_PATH=~/root-disks/
+# Expects ppc64[le]-rootfs.cpio.gz in ROOT_DISK_PATH
+#
+# $ export ROOT_DISK_PATH=~/root-disks
+# $ cd ~/src/linux
+# $ make
+# $ ~/src/ci-scripts/scripts/boot/qemu-pseries
+#
+# Or:
+#
+# export VMLINUX_PATH=~/src/linux/vmlinux
+# export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
+#
+# Optional:
+# export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
+#
+# export CPU=(POWER8|POWER9)    # Default POWER8
+# export ENDIAN=(little|big)    # Default little
+# export ACCEL=(tcg|kvm)        # Default tcg
+# export SMP=n                  # Default 2 for tcg or 8 for kvm
+
+import logging
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import qemu_command, qemu_net_setup
+from pexpect_utils import *
+from utils import *
+
+
+def main():
+    setup_logging()
+    setup_timeout(60)
+
+    if not check_env_vars(['ROOT_DISK_PATH']):
+        return 1
+
+    expected_release = get_expected_release()
+    if expected_release is None:
+        return False
+
+    vmlinux = get_vmlinux()
+    if vmlinux is None:
+        return False
+
+    cpu = os.environ.get('CPU', 'POWER8')
+    endian = os.environ.get('ENDIAN', 'little')
+    accel = os.environ.get('ACCEL', 'tcg')
+
+    if endian == 'little':
+        rootfs='ppc64le-rootfs.cpio.gz'
+    else:
+        rootfs='ppc64-rootfs.cpio.gz'
+
+    smp = os.environ.get('SMP', None)
+    if smp is None:
+        if accel == 'tcg':
+            smp = 2
+        else:
+            smp = 8
+
+    p = PexpectHelper()
+    cmd = qemu_command(vmlinux=vmlinux, cpu=cpu, mem='4G', rootfs=rootfs,
+                       net='-nic user,model=virtio-net-pci',
+                       accel=accel, smp=smp, cmdline='noreboot')
+    p.spawn(cmd, logfile=open('console.log', 'w'))
+
+    standard_boot(p)
+
+    p.send("echo -n 'booted-revision: '; uname -r")
+    p.expect(f'booted-revision: {expected_release}')
+    p.expect_prompt()
+
+    p.send('cat /proc/cpuinfo')
+    p.expect("IBM pSeries \(emulated by qemu\)")
+    p.expect_prompt()
+
+    qemu_net_setup(p)
+    ping_test(p)
+    wget_test(p)
+
+    p.cmd('halt')
+    p.wait_for_exit()
+
+    if filter_log_warnings(open('console.log'), open('warnings.txt', 'w')):
+        logging.error('Errors/warnings seen in console.log')
+        return False
+
+    logging.info('Test completed OK')
+
+    return True
+
+
+sys.exit(0 if main() else 1)

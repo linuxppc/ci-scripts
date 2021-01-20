@@ -1,0 +1,16 @@
+warnings:
+  patterns:
+    - 'detected stall(s)? on CPU'
+    - 'WARNING:.*\s(un)?lock(s|ing)?\s'
+    - 'WARNING: CPU: \d+ PID: \d+ at '
+  strings:
+    - 'Unable to handle kernel paging request for'
+    - 'Kernel BUG at'
+    - 'Warning!'
+    - 'BUG:'
+    - 'WARNING: chain_key collision'
+    - 'WARNING: bad contention detected!'
+    - 'WARNING: suspicious RCU usage'
+  suppressions:
+    - 'test_debug_virtual_init'
+    - 'at drivers/misc/lkdtm/'
