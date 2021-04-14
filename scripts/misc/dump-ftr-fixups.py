@@ -9,7 +9,11 @@ from tempfile import mkstemp
 
 
 def iter_fixups(vmlinux_path, section):
-    start_addr, offset, size = read_section_info(vmlinux_path, section)
+    try:
+        start_addr, offset, size = read_section_info(vmlinux_path, section)
+    except subprocess.CalledProcessError as ex:
+        print("{}".format(ex))
+        return
     endian = get_endian(vmlinux_path)
 
     f = open(vmlinux_path, 'rb')
@@ -199,6 +203,10 @@ def run_objdump(path, endian):
 
 
 def objdump_range(bin_file, path, endian, start, end):
+    if start == end:
+        print("Warning: empty range {:x}".format(start))
+        return []
+
     offset = find_section_by_addr(path, start, end)
 
     bin_file.seek(offset)
