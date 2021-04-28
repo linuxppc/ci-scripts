@@ -1,6 +1,6 @@
 import os
 import logging
-from utils import get_env_var
+from utils import get_env_var, get_endian
 from pexpect_utils import PexpectHelper
 
 
@@ -31,7 +31,7 @@ def get_qemu_version(emulator):
 
 
 def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=None,
-                 mem='1G', smp=1, vmlinux=None, rootfs='rootfs-le.cpio.xz',
+                 mem='1G', smp=1, vmlinux=None, rootfs=None,
                  cmdline='', accel='tcg', net='-nic user'):
 
     qemu_path = get_qemu(qemu)
@@ -39,6 +39,16 @@ def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=No
 
     if vmlinux is None:
         vmlinux = get_vmlinux()
+
+    if rootfs is None:
+        if qemu == 'qemu-system-ppc':
+            subarch = 'ppc'
+        elif get_endian(vmlinux) == 'little':
+            subarch = 'ppc64le'
+        else:
+            subarch = 'ppc64'
+
+        rootfs = f'{subarch}-rootfs.cpio.gz'
 
     l = [
         get_qemu(qemu),

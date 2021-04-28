@@ -3,6 +3,12 @@
 # $ export ROOT_DISK_PATH=~/root-disks/
 # Expects ppc64-rootfs.cpio.gz in ROOT_DISK_PATH
 #
+# Kernel needs:
+#   g5_defconfig +
+#   CONFIG_SERIAL_PMACZILOG=y
+#   CONFIG_SERIAL_PMACZILOG_TTYS=y
+#   CONFIG_SERIAL_PMACZILOG_CONSOLE=y
+#
 # $ cd ~/src/linux
 # $ make
 # $ ~/src/ci-scripts/scripts/boot/qemu-g5
@@ -39,11 +45,8 @@ def main():
     if vmlinux is None:
         return False
 
-    rootfs = 'ppc64-rootfs.cpio.gz'
-
     p = PexpectHelper()
-    cmd = qemu_command(vmlinux=vmlinux, machine='mac99', rootfs=rootfs,
-		       cmdline='noreboot')
+    cmd = qemu_command(vmlinux=vmlinux, machine='mac99', cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))
 
     standard_boot(p)

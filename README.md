@@ -19,13 +19,13 @@ Clone this repo.
 ```
 $ cd ci-scripts
 $ cd build
-$ make pull-image@ppc64le@ubuntu@20.04 
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+$ make pull-image@ppc64le@ubuntu@21.04
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@21.04 JFACTOR=$(nproc)
 ```
 
-This will build you a `ppc64le_defconfig` using the Ubuntu 20.04 toolchain.
+This will build you a `ppc64le_defconfig` using the Ubuntu 21.04 toolchain.
 
-The kernel will be in `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/vmlinux`.
+The kernel will be in `output/ppc64le@ubuntu@21.04/ppc64le_defconfig/vmlinux`.
 
 For more help try `make help`.
 
@@ -35,14 +35,14 @@ Building different defconfigs
 You can specify a defconfig with `DEFCONFIG`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu@20.04 DEFCONFIG=powernv_defconfig JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@21.04 DEFCONFIG=powernv_defconfig JFACTOR=$(nproc)
 ```
 
 Note that the subarch (eg. `ppc64le`) needs to match the defconfig, so to build
 `ppc64_defconfig`, use `ppc64`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64@ubuntu@20.04 DEFCONFIG=ppc64_defconfig JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64@ubuntu@21.04 DEFCONFIG=ppc64_defconfig JFACTOR=$(nproc)
 ```
 
 Different toolchains
@@ -55,6 +55,7 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - kernel.org gcc 8.1.0 `korg@8.1.0`
  - kernel.org gcc 5.5.0 `korg@5.5.0`
  - kernel.org gcc 4.9.4 (BE only) `korg@4.9.4`
+ - Ubuntu 21.04 `ubuntu@21.04`
  - Ubuntu 20.10 `ubuntu@20.10`
  - Ubuntu 20.04 `ubuntu@20.04`
  - Ubuntu 18.04 `ubuntu@18.04`
@@ -70,13 +71,13 @@ Building selftests
 To build the kernel selftests:
 
 ```
-$ make SRC=~/src/linux selftests@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+$ make SRC=~/src/linux selftests@ppc64le@ubuntu@21.04 JFACTOR=$(nproc)
 ```
 
 Or just the powerpc selftests:
 
 ```
-$ make SRC=~/src/linux ppctests@ppc64le@ubuntu@20.04 JFACTOR=$(nproc)
+$ make SRC=~/src/linux ppctests@ppc64le@ubuntu@21.04 JFACTOR=$(nproc)
 ```
 
 You can also build the powerpc selftests with all available toolchains using:
@@ -90,17 +91,17 @@ Other options
 
 As mentioned above you pass the make -j factor with `JFACTOR=n`.
 
-To run sparse use the `ubuntu@20.04` image and pass `SPARSE=1`.
+To run sparse use the `ubuntu@21.04` image and pass `SPARSE=1`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu@20.04 SPARSE=1 JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@21.04 SPARSE=1 JFACTOR=$(nproc)
 ```
 
-The log will be in eg. `output/ppc64le@ubuntu@20.04/ppc64le_defconfig/sparse.log`.
+The log will be in eg. `output/ppc64le@ubuntu@21.04/ppc64le_defconfig/sparse.log`.
 
 To build modules pass `MODULES=1`
 
-To build with clang pass `CLANG=1`, only works using the Ubuntu `devel` images.
+To build with clang pass `CLANG=1`, only works using the Ubuntu `21.04` images.
 
 For a quiet build pass `QUIET=1`, for verbose pass `VERBOSE=1`.
 
@@ -122,7 +123,7 @@ Building your own image
 If you don't want to pull an untrusted image, you can build it yourself with:
 
 ```
-$ make rebuild-image@ppc64le@ubuntu@20.04
+$ make rebuild-image@ppc64le@ubuntu@21.04
 ```
 
 Note that the build mounts the source tree read-only, so nothing it does can

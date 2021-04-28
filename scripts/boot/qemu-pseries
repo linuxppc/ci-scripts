@@ -17,7 +17,6 @@
 # export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
 #
 # export CPU=(POWER8|POWER9)    # Default POWER8
-# export ENDIAN=(little|big)    # Default little
 # export ACCEL=(tcg|kvm)        # Default tcg
 # export SMP=n                  # Default 2 for tcg or 8 for kvm
 
@@ -46,13 +45,7 @@ def main():
         return False
 
     cpu = os.environ.get('CPU', 'POWER8')
-    endian = os.environ.get('ENDIAN', 'little')
     accel = os.environ.get('ACCEL', 'tcg')
-
-    if endian == 'little':
-        rootfs='ppc64le-rootfs.cpio.gz'
-    else:
-        rootfs='ppc64-rootfs.cpio.gz'
 
     smp = os.environ.get('SMP', None)
     if smp is None:
@@ -62,7 +55,7 @@ def main():
             smp = 8
 
     p = PexpectHelper()
-    cmd = qemu_command(vmlinux=vmlinux, cpu=cpu, mem='4G', rootfs=rootfs,
+    cmd = qemu_command(vmlinux=vmlinux, cpu=cpu, mem='4G',
                        net='-nic user,model=virtio-net-pci',
                        accel=accel, smp=smp, cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))

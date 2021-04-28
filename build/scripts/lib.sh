@@ -51,6 +51,7 @@ function get_output_dir()
         clean-selftests)
             if [[ -n "$targets" ]]; then
                 targets=${targets// /_}
+                targets=${targets//\//_}
                 d="$d/selftests_$targets"
             else
                 d="$d/selftests"

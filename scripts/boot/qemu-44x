@@ -41,7 +41,7 @@ def main():
 
     p = PexpectHelper()
     cmd = qemu_command(qemu='qemu-system-ppc', machine='bamboo', vmlinux=vmlinux,
-                       rootfs='ppc-rootfs.cpio.gz', cmdline='noreboot')
+                       cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))
 
     standard_boot(p)

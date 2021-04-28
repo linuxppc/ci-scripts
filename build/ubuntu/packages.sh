@@ -43,6 +43,9 @@ if [[ "$machine" == "ppc64le" ]]; then
     PACKAGES+=" libcap-ng-dev"
     PACKAGES+=" libnuma-dev"
     PACKAGES+=" libpopt-dev"
+    PACKAGES+=" libhugetlbfs-dev"
+    PACKAGES+=" libmnl-dev"
+    PACKAGES+=" libmount-dev"
 else
     PACKAGES+=" gcc-powerpc64le-linux-gnu g++-powerpc64le-linux-gnu"
 fi

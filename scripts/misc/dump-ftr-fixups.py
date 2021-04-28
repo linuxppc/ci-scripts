@@ -96,7 +96,7 @@ def decode_ftr(features, value):
         remainder &= ~mask
 
     if remainder:
-        s.append(remainder)
+        s.append("UNKNOWN={:x}".format(remainder))
 
     return ', '.join(s)
 
@@ -112,6 +112,9 @@ mmu_features = [
     (0x00000010, 'MMU_FTR_TYPE_FSL_E'),
     (0x00000020, 'MMU_FTR_TYPE_47x'),
     (0x00000040, 'MMU_FTR_TYPE_RADIX'),
+    (0x00000200, 'MMU_FTR_BOOK3S_KUAP'),
+    (0x00000400, 'MMU_FTR_BOOK3S_KUEP'),
+    (0x00000800, 'MMU_FTR_PKEY'),
     (0x00002000, 'MMU_FTR_68_BIT_VA'),
     (0x00004000, 'MMU_FTR_KERNEL_RO'),
     (0x00008000, 'MMU_FTR_TLBIE_CROP_VA'),
@@ -196,6 +199,10 @@ def run_objdump(path, endian):
 
 
 def objdump_range(bin_file, path, endian, start, end):
+    if start == end:
+        print("Warning: empty range {:x}".format(start))
+        return []
+
     offset = find_section_by_addr(path, start, end)
 
     bin_file.seek(offset)

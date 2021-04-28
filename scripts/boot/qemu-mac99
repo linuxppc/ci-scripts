@@ -47,8 +47,7 @@ def main():
         return False
 
     p = PexpectHelper()
-    cmd = qemu_command(qemu='qemu-system-ppc', machine='mac99', vmlinux=vmlinux,
-                       rootfs='ppc-rootfs.cpio.gz', cmdline='noreboot')
+    cmd = qemu_command(qemu='qemu-system-ppc', machine='mac99', vmlinux=vmlinux, cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))
 
     standard_boot(p)

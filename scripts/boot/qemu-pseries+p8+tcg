@@ -1,7 +1,6 @@
 #!/bin/bash
 
-export CPU=POWER9
-export ENDIAN=big
+export CPU=POWER8
 export ACCEL=tcg
 
 exec "$(dirname "$0")"/qemu-pseries $@
