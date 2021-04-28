@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         subarch: [ppc64le]
-        image: [ ubuntu@21.04, ubuntu@20.10, ubuntu@20.04, ubuntu@18.04, ubuntu@16.04, fedora@32, korg@10.1.0, korg@9.3.0, korg@5.5.0 ]
+        image: [ ubuntu@21.04, ubuntu@20.10, ubuntu@20.04, ubuntu@18.04, ubuntu@16.04, fedora@32, korg@10.3.0, korg@10.1.0, korg@9.3.0, korg@5.5.0 ]
         include:
           - subarch: ppc64
             image: korg@4.9.4
