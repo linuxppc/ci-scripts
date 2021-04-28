@@ -16,46 +16,6 @@ env:
 jobs:
   include:
     - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=ubuntu@devel
-      name: ppc64le@ubuntu@devel
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=ubuntu@20.10
-      name: ppc64le@ubuntu@20.10
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=ubuntu@20.04
-      name: ppc64le@ubuntu@20.04
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=ubuntu@18.04
-      name: ppc64le@ubuntu@18.04
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=ubuntu@16.04
-      name: ppc64le@ubuntu@16.04
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=fedora@32
-      name: ppc64le@fedora@32
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=korg@10.1.0
-      name: ppc64le@korg@10.1.0
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=korg@9.3.0
-      name: ppc64le@korg@9.3.0
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64le IMAGE=korg@5.5.0
-      name: ppc64le@korg@5.5.0
-    - os:   linux
-      arch: amd64
-      env:  SUBARCH=ppc64 IMAGE=korg@4.9.4
-      name: ppc64@korg@4.9.4
-    - os:   linux
       arch: ppc64le
       env:  SUBARCH=ppc64le IMAGE=ubuntu@devel
       name: ppc64le@ubuntu@devel
