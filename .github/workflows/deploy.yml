@@ -1,0 +1,35 @@
+name: Build & publish docker image
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - deploy
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: docker-deploy
+
+    strategy:
+      matrix:
+        subarch: [ppc64le]
+        image: [ ubuntu@21.04, ubuntu@20.10, ubuntu@20.04, ubuntu@18.04, ubuntu@16.04, fedora@32, korg@10.1.0, korg@9.3.0, korg@5.5.0 ]
+        include:
+          - subarch: ppc64
+            image: korg@4.9.4
+
+    env:
+      SUBARCH: ${{ matrix.subarch }}
+      IMAGE: ${{ matrix.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build docker image
+        run: make -C build rebuild-image@$SUBARCH@$IMAGE
+
+      - name: Push docker image
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: make -C build push-image@$SUBARCH@$IMAGE
