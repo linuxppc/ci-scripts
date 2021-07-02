@@ -34,7 +34,7 @@ def main():
     setup_timeout(60)
 
     if not check_env_vars(['ROOT_DISK_PATH']):
-        return 1
+        return False
 
     expected_release = get_expected_release()
     if expected_release is None:

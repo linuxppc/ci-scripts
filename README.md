@@ -50,7 +50,8 @@ Different toolchains
 
 There are images for various toolchains, they are encoded in the distro name/version.
 
- - kernel.org gcc 10.1.0 `korg@10.1.0`
+ - kernel.org gcc 11.1.0 `korg@11.1.0`
+ - kernel.org gcc 10.3.0 `korg@10.3.0`
  - kernel.org gcc 9.3.0 `korg@9.3.0`
  - kernel.org gcc 8.1.0 `korg@8.1.0`
  - kernel.org gcc 5.5.0 `korg@5.5.0`

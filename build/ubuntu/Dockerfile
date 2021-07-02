@@ -17,9 +17,13 @@ RUN apt-get -q -y update && \
       ca-certificates \
       ccache \
       cpio \
+      crossbuild-essential-powerpc \
+      gcc-multilib-powerpc-linux-gnu \
       file \
       flex \
       gcc \
+      gcc-powerpc-linux-gnu \
+      g++-powerpc-linux-gnu \
       git \
       kmod \
       libc-dev \

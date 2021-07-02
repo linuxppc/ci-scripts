@@ -102,7 +102,7 @@ def standard_boot(p, login=False, user='root'):
     p.push_prompt(p.DEFAULT_PROMPT)
 
     logging.info("Waiting for kernel to boot")
-    p.expect("Freeing unused kernel memory:")
+    p.expect("Freeing unused kernel ")
 
     if login:
         logging.info("Kernel came up, waiting for login ...")
