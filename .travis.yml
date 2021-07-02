@@ -53,10 +53,6 @@ jobs:
       name: ppc64le@korg@10.3.0
     - os:   linux
       arch: ppc64le
-      env:  SUBARCH=ppc64le IMAGE=korg@10.1.0
-      name: ppc64le@korg@10.1.0
-    - os:   linux
-      arch: ppc64le
       env:  SUBARCH=ppc64le IMAGE=korg@9.3.0
       name: ppc64le@korg@9.3.0
     - os:   linux
