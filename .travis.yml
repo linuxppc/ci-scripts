@@ -63,10 +63,6 @@ jobs:
       arch: ppc64le
       env:  SUBARCH=ppc64le IMAGE=korg@5.5.0
       name: ppc64le@korg@5.5.0
-    - os:   linux
-      arch: ppc64le
-      env:  SUBARCH=ppc64 IMAGE=korg@4.9.4
-      name: ppc64@korg@4.9.4
 
 script:
   - make -C build rebuild-image@$SUBARCH@$IMAGE
