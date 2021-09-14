@@ -74,14 +74,10 @@ elif [[ "$distro" == "korg" ]]; then
     arch=$(uname -m)
 
     cmd+="--build-arg base_url=https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/${arch}/${version}/ "
-    if [[ "$version" == "4.6.3" ]]; then
-	cmd+="--build-arg tar_file=${arch}-gcc-${version}-nolibc_powerpc64-linux.tar.xz "
-    else
-	cmd+="--build-arg tar_file=${arch}-gcc-${version}-nolibc-powerpc64-linux.tar.xz "
-    fi
+    cmd+="--build-arg tar_file=${arch}-gcc-${version}-nolibc-powerpc64-linux.tar.xz "
 
-    # Use an older distro for the 4.x/5.x toolchains.
-    if [[ "$version" == 4.* || "$version" == 5.* ]]; then
+    # Use an older distro for the 5.x toolchains.
+    if [[ "$version" == 5.* ]]; then
 	from="ubuntu:16.04"
     else
 	from="ubuntu:20.04"
