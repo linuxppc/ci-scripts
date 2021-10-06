@@ -142,6 +142,8 @@ if [[ -n "$DOCKER_EXTRA_ARGS" ]]; then
     cmd+="$DOCKER_EXTRA_ARGS "
 fi
 
+cmd+="$PODMAN_OPTS "
+
 cmd+="$image "
 cmd+="/bin/container-build.sh $task"
 

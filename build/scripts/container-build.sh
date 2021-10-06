@@ -134,6 +134,20 @@ elif [[ "$1" == "docs" ]]; then
             rc=1
         fi
     fi
+elif [[ "$1" == "perf" ]]; then
+    cmd="make $quiet -C tools/perf O=/output"
+
+    if [[ -n "$PRE_CLEAN" ]]; then
+        (set -x; $cmd clean)
+    fi
+
+    (set -x; $cmd)
+    rc=$?
+    echo "## tools/perf build completed rc = $rc"
+
+    if [[ -n "$POST_CLEAN" ]]; then
+        (set -x; $cmd clean)
+    fi
 else
     # Workaround 303e6218ecec ("selftests: Fix O= and KBUILD_OUTPUT handling for relative paths")
     export abs_objtree=$KBUILD_OUTPUT

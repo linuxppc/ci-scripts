@@ -57,6 +57,10 @@ function get_output_dir()
                 d="$d/selftests"
             fi
             ;;
+        perf) ;&
+        clean-perf)
+            d="$d/perf"
+            ;;
     esac
 
     if [[ -n "$clang" ]]; then
@@ -70,7 +74,9 @@ function get_output_dir()
 
 grep "^NAME=Fedora$" /etc/os-release > /dev/null
 if [[ $? -eq 0 ]]; then
-    DOCKER="sudo docker"
+    DOCKER="podman"
+    PODMAN_OPTS="--security-opt label=disable --userns=keep-id"
 else
     DOCKER="docker"
+    PODMAN_OPTS=""
 fi

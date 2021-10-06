@@ -8,8 +8,9 @@ Still (and probably always) under heavy development.
 Quick start
 -----------
 
-Make sure you can run docker containers.
-On Fedora the script will call `sudo docker` for you.
+Make sure you can run containers.
+
+On Ubuntu the scripts will use `docker`, on Fedora they will use `podman`.
 
 You need a Linux source tree, which hasn't been built in. You can make sure it's
 clean with `make mrproper`, or clone a fresh tree.
