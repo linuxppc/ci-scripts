@@ -34,6 +34,7 @@ RUN apt-get -q -y update && \
       lzop \
       make \
       openssl \
+      python3 \
       u-boot-tools \
       rename \
       rsync \
