@@ -2,6 +2,6 @@
 
 export CPU=POWER8
 export ACCEL=tcg
-export CLOUD_IMAGE=
+export CLOUD_IMAGE=ubuntu16.04-cloudimg-powerpc.qcow2
 
 exec "$(dirname "$0")"/qemu-pseries $@

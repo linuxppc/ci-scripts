@@ -23,7 +23,7 @@ class PexpectHelper:
         self.bug_patterns = self.default_bug_patterns
 
     def spawn(self, *args, **kwargs):
-        logging.debug("Spawning '%s'" % args)
+        logging.info("Spawning '%s'" % args)
         self.child = pexpect.spawn(*args, timeout=60, encoding='utf-8', echo=False, **kwargs)
         if '--quiet' not in sys.argv:
             self.log_to(sys.stdout)
@@ -83,8 +83,8 @@ class PexpectHelper:
         self.prompt_stack.pop()
         self.prompt = self.prompt_stack[-1]
 
-    def expect_prompt(self):
-        self.expect(self.prompt)
+    def expect_prompt(self, timeout=-1):
+        self.expect(self.prompt, timeout=timeout)
 
     def send_no_newline(self, data):
         self.child.send(data)
@@ -98,27 +98,34 @@ class PexpectHelper:
         self.expect_prompt()
 
 
-def standard_boot(p, login=False, user='root'):
-    p.push_prompt(p.DEFAULT_PROMPT)
+def standard_boot(p, login=False, user='root', password=None, timeout=-1, prompt=None):
+    if prompt is None:
+        prompt = p.DEFAULT_PROMPT
+
+    p.push_prompt(prompt)
 
     logging.info("Waiting for kernel to boot")
-    p.expect("Freeing unused kernel ")
+    p.expect("Freeing unused kernel ", timeout=timeout)
 
     if login:
         logging.info("Kernel came up, waiting for login ...")
-        p.expect("login:")
+        p.expect("login:", timeout=timeout)
         p.send(user)
+        if password is not None:
+            p.expect("Password:", timeout=timeout)
+            p.send(password)
     else:
         logging.info("Kernel came up, waiting for prompt ...")
 
-    p.expect_prompt()
+    p.expect_prompt(timeout=timeout)
     logging.info("Booted to shell prompt")
 
 
 def ping_test(p, ip='10.0.2.2', check=True):
-    p.send(f'ping -c 3 {ip}')
+    p.send(f'ping -W 10 -c 3 {ip}')
     if check:
-        p.expect('3 packets transmitted, 3 packets received')
+        # busybox ping prints "packets received", iputils-ping does not
+        p.expect('3 packets transmitted, 3( packets)? received')
     p.expect_prompt()
 
 

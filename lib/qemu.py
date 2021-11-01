@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 from utils import get_env_var, get_endian
 from pexpect_utils import PexpectHelper
@@ -14,10 +15,22 @@ def get_qemu(name='qemu-system-ppc64'):
     return qemu
 
 
-def get_rootfs(fname):
-    path = get_env_var('ROOT_DISK_PATH', '')
-    val = os.path.join(path, fname)
+def get_root_disk_path():
+    path = get_env_var('ROOT_DISK_PATH', None)
+    if path is not None:
+        return path
 
+    base = os.path.dirname(sys.argv[0])
+    # Assumes we're called from scripts/boot/qemu-xxx
+    path = f'{base}/../../root-disks'
+    if os.path.isdir(path):
+        return path
+
+    return ''
+
+
+def get_root_disk(fname):
+    val = os.path.join(get_root_disk_path(), fname)
     logging.debug(f'Using rootfs {val}')
     return val
 
@@ -31,7 +44,7 @@ def get_qemu_version(emulator):
 
 
 def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=None,
-                 mem='1G', smp=1, vmlinux=None, rootfs=None,
+                 mem='1G', smp=1, vmlinux=None, initrd=None, drive=None,
                  cmdline='', accel='tcg', net='-nic user'):
 
     qemu_path = get_qemu(qemu)
@@ -39,16 +52,6 @@ def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=No
 
     if vmlinux is None:
         vmlinux = get_vmlinux()
-
-    if rootfs is None:
-        if qemu == 'qemu-system-ppc':
-            subarch = 'ppc'
-        elif get_endian(vmlinux) == 'little':
-            subarch = 'ppc64le'
-        else:
-            subarch = 'ppc64'
-
-        rootfs = f'{subarch}-rootfs.cpio.gz'
 
     l = [
         get_qemu(qemu),
@@ -59,9 +62,25 @@ def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=No
         '-m', mem,
         '-accel', accel,
         '-kernel', vmlinux,
-        '-initrd', get_rootfs(rootfs),
         net,
     ]
+
+    if initrd is None and drive is None:
+        if qemu == 'qemu-system-ppc':
+            subarch = 'ppc'
+        elif get_endian(vmlinux) == 'little':
+            subarch = 'ppc64le'
+        else:
+            subarch = 'ppc64'
+
+        initrd = f'{subarch}-rootfs.cpio.gz'
+
+    if initrd:
+        l.append('-initrd')
+        l.append(get_root_disk(initrd))
+
+    if drive:
+        l.append(drive)
 
     if cpu is not None:
         l.append('-cpu')

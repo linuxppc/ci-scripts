@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 #
-# $ export ROOT_DISK_PATH=~/root-disks/
-# Expects ppc-rootfs.cpio.gz in ROOT_DISK_PATH
-#
 # Kernel needs:
 #  CONFIG_SERIAL_PMACZILOG=y
 #  CONFIG_SERIAL_PMACZILOG_TTYS=y
@@ -21,6 +18,8 @@
 #
 # Optional:
 # export QEMU_SYSTEM_PPC=~/src/qemu/ppc-softmmu/qemu-system-ppc
+# export ROOT_DISK_PATH=~/some/directory
+# Expects ppc-rootfs.cpio.gz in ROOT_DISK_PATH
 
 import logging
 import os, sys
@@ -34,9 +33,6 @@ from utils import *
 def main():
     setup_logging()
     setup_timeout(60)
-
-    if not check_env_vars(['ROOT_DISK_PATH']):
-        return 1
 
     expected_release = get_expected_release()
     if expected_release is None:

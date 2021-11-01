@@ -1,0 +1,11 @@
+#cloud-config
+users:
+  - name: user
+    lock_passwd: false
+    plain_text_passwd: linuxppc
+  - name: root
+    lock_passwd: false
+    plain_text_passwd: linuxppc
+
+# don't regenerate ssh keys, it takes time for no benefit
+ssh_deletekeys: false

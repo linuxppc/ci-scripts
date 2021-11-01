@@ -1,15 +1,5 @@
 #!/usr/bin/python3
 #
-# $ export ROOT_DISK_PATH=~/root-disks/
-#
-# Expects ROOT_DISK_PATH to contain either:
-#   ppc64-novsx-rootfs.cpio.gz
-#
-# or
-#   ppc-rootfs.cpio.gz
-#
-# if COMPAT_USERSPACE is set.
-#
 # Kernel needs:
 #   CONFIG_PPC_QEMU_E500=y
 #   CONFIG_POWER_RESET_GPIO=y
@@ -25,6 +15,14 @@
 #
 # Optional:
 # export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
+# export ROOT_DISK_PATH=~/some/directory
+#
+# Expects ROOT_DISK_PATH to contain either:
+#   ppc64-novsx-rootfs.cpio.gz
+# or
+#   ppc-rootfs.cpio.gz
+#
+# if COMPAT_USERSPACE is set.
 
 import logging
 import os, sys
@@ -39,9 +37,6 @@ def main():
     setup_logging()
     setup_timeout(60)
 
-    if not check_env_vars(['ROOT_DISK_PATH']):
-        return 1
-
     expected_release = get_expected_release()
     if expected_release is None:
         return False
@@ -51,13 +46,13 @@ def main():
         return False
 
     if os.environ.get('COMPAT_USERSPACE', False):
-        rootfs = 'ppc-rootfs.cpio.gz'
+        initrd = 'ppc-rootfs.cpio.gz'
     else:
-        rootfs = 'ppc64-novsx-rootfs.cpio.gz'
+        initrd = 'ppc64-novsx-rootfs.cpio.gz'
 
     p = PexpectHelper()
     cmd = qemu_command(vmlinux=vmlinux, machine='ppce500', cpu='e5500',
-                       mem='4G', rootfs=rootfs, cmdline='noreboot')
+                       mem='4G', initrd=initrd, cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))
 
     standard_boot(p)
