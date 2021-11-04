@@ -53,10 +53,6 @@ jobs:
       name: ppc64le@fedora@33
     - os:   linux
       arch: ppc64le
-      env:  SUBARCH=ppc64le IMAGE=fedora@32
-      name: ppc64le@fedora@32
-    - os:   linux
-      arch: ppc64le
       env:  SUBARCH=ppc64le IMAGE=korg@11.1.0
       name: ppc64le@korg@11.1.0
     - os:   linux
