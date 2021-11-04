@@ -55,9 +55,10 @@ def main():
     p.expect("PowerMac3,1 MacRISC MacRISC2 Power Macintosh")
     p.expect_prompt()
 
-    qemu_net_setup(p)
-    ping_test(p)
-    wget_test(p)
+    if os.environ.get('QEMU_NET_TESTS', True) != '0':
+        qemu_net_setup(p)
+        ping_test(p)
+        wget_test(p)
 
     p.send("halt")
     p.expect("reboot: System halted")

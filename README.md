@@ -65,7 +65,6 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - Fedora 35 `fedora@35`
  - Fedora 34 `fedora@34`
  - Fedora 33 `fedora@33`
- - Fedora 32 `fedora@32`
  - Fedora 31 `fedora@31`
  
 Only the Ubuntu toolchains can build the selftests.

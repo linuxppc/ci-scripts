@@ -50,9 +50,10 @@ def main():
     p.expect("PowerPC 44x Platform")
     p.expect_prompt()
 
-    qemu_net_setup(p)
-    ping_test(p, check=False)
-    wget_test(p)
+    if os.environ.get('QEMU_NET_TESTS', True) != '0':
+        qemu_net_setup(p)
+        ping_test(p, check=False)
+        wget_test(p)
 
     p.send('echo o > /proc/sysrq-trigger')
     p.expect('System Halted, OK to turn off power')

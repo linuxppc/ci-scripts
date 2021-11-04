@@ -6,10 +6,11 @@
 #  CONFIG_SERIAL_PMACZILOG_CONSOLE=y
 #  CONFIG_DEVTMPFS=y
 #  CONFIG_DEVTMPFS_MOUNT=y
+#  CONFIG_NE2K_PCI=y
 #
 # $ cd ~/src/linux
 # $ make
-# $ ~/src/ci-scripts/scripts/boot/qemu-mac99
+# $ ~/src/ci-scripts/scripts/boot/qemu-g3beige
 #
 # Or:
 #
@@ -43,7 +44,7 @@ def main():
         return False
 
     p = PexpectHelper()
-    cmd = qemu_command(qemu='qemu-system-ppc', machine='mac99', vmlinux=vmlinux, cmdline='noreboot')
+    cmd = qemu_command(qemu='qemu-system-ppc', machine='g3beige', vmlinux=vmlinux, cmdline='noreboot')
     p.spawn(cmd, logfile=open('console.log', 'w'))
 
     standard_boot(p)
@@ -53,7 +54,7 @@ def main():
     p.expect_prompt()
 
     p.send('cat /proc/cpuinfo')
-    p.expect('PowerMac3,1 MacRISC MacRISC2 Power Macintosh')
+    p.expect('AAPL,PowerMac G3 MacRISC')
     p.expect_prompt()
 
     if os.environ.get('QEMU_NET_TESTS', True) != '0':
