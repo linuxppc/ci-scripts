@@ -62,6 +62,7 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - Ubuntu 20.04 `ubuntu@20.04`
  - Ubuntu 18.04 `ubuntu@18.04`
  - Ubuntu 16.04 `ubuntu@16.04`
+ - Fedora 35 `fedora@35`
  - Fedora 34 `fedora@34`
  - Fedora 33 `fedora@33`
  - Fedora 32 `fedora@32`
