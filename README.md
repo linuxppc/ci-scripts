@@ -95,13 +95,15 @@ Other options
 
 As mentioned above you pass the make -j factor with `JFACTOR=n`.
 
-To run sparse use the `ubuntu@21.10` image and pass `SPARSE=1`.
+To run sparse use the `ubuntu@21.10` image and pass `SPARSE=2`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu@21.10 SPARSE=1 JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64le@ubuntu@21.10 SPARSE=2 JFACTOR=$(nproc)
 ```
 
 The log will be in eg. `output/ppc64le@ubuntu@21.10/ppc64le_defconfig/sparse.log`.
+
+To only run sparse on files being recompiled, pass `SPARSE=1`.
 
 To build modules pass `MODULES=1`
 

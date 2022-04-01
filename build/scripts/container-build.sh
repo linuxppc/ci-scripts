@@ -86,7 +86,7 @@ if [[ "$1" == "kernel" ]]; then
         if [[ -n "$SPARSE" ]]; then
             rm -f /output/sparse.log
             touch /output/sparse.log
-            (set -x; make C=2 CF=">> /output/sparse.log 2>&1" $verbose $quiet "$cc" -j $JFACTOR)
+            (set -x; make C=$SPARSE CF=">> /output/sparse.log 2>&1" $verbose $quiet "$cc" -j $JFACTOR)
 
             rc=$?
 
