@@ -72,11 +72,11 @@ function get_output_dir()
     return 0
 }
 
-grep "^NAME=Fedora$" /etc/os-release > /dev/null
-if [[ $? -eq 0 ]]; then
-    DOCKER="podman"
-    PODMAN_OPTS="--security-opt label=disable --userns=keep-id"
-else
-    DOCKER="docker"
-    PODMAN_OPTS=""
+DOCKER="docker"
+PODMAN_OPTS=""
+if command -v podman > /dev/null; then
+    if (command -v docker && docker --version | grep -q podman) > /dev/null || ! command -v docker > /dev/null; then
+        DOCKER="podman"
+        PODMAN_OPTS="--security-opt label=disable --userns=keep-id"
+    fi
 fi
