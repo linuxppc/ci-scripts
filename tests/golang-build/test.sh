@@ -2,26 +2,26 @@
 
 set -euo pipefail
 
-name="golang-build"
-echo "test: $name"
-
 rc=0
 go version || rc=1
 if [[ $rc -ne 0 ]]; then
     echo "Error: go missing, install with package manager" >&2
-    echo "failure: $name"
     exit 1
 fi
 
+echo "Sending output to $PWD/log."
+rm -f log
+
 rm -rf go-go1.16.6
 tar -xf go1.16.6.tar.gz
-cd go-go1.16.6/src
 
-echo "Building ..."
-./all.bash
+{
+	cd go-go1.16.6/src
+	set -x
+	./all.bash
+	../bin/go run ../test/helloworld.go
 
-../bin/go run ../test/helloworld.go
+	set +x
+	echo "success: golang-build" >&2
 
-echo "success: $name"
-
-exit 0
+} 2>&1 >> log | tee -a log

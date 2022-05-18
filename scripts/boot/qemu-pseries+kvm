@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export CPU=host
+export ACCEL=kvm
+export CLOUD_IMAGE=
+
+exec "$(dirname "$0")"/qemu-pseries $@

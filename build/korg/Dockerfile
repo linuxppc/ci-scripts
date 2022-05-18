@@ -15,6 +15,7 @@ RUN apt-get -q -y update && \
       ccache \
       cpio \
       curl \
+      dwarves \
       file \
       flex \
       gcc \

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export CPU=POWER8
+export ACCEL=tcg
+export CLOUD_IMAGE=
+
+exec "$(dirname "$0")"/qemu-powernv $@

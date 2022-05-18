@@ -17,8 +17,6 @@ script_base="$(realpath "$dir")"
 
 IFS=@ read -r task subarch distro version <<< "$1"
 
-image="linuxppc/build:$distro-$version"
-
 SRC="${SRC/#\~/$HOME}"
 SRC=$(realpath "$SRC")
 
@@ -105,6 +103,10 @@ if [[ "$task" == "kernel" ]]; then
 	cmd+="-e MERGE_CONFIG=$MERGE_CONFIG "
     fi
 
+    if [[ -n "$MOD2YES" ]]; then
+	cmd+="-e MOD2YES=1 "
+    fi
+
     if [[ -n "$CLANG" ]]; then
         cmd+="-e CLANG=1 "
     fi
@@ -143,6 +145,13 @@ if [[ -n "$DOCKER_EXTRA_ARGS" ]]; then
 fi
 
 cmd+="$PODMAN_OPTS "
+
+if [[ -z "$version" ]]; then
+    # NB, after we passed $version to get_output_dir()
+    version=$(get_default_version $distro)
+fi
+
+image="docker.io/linuxppc/build:$distro-$version"
 
 cmd+="$image "
 cmd+="/bin/container-build.sh $task"

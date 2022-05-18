@@ -22,7 +22,7 @@ if [[ "$machine" == "ppc64le" ]]; then
     PACKAGES+=" libmount-dev"
 
     # For the x86_64 container
-    if [[ "$VERSION_ID" == "21.10" ]]; then
+    if [[ "$major" -ge 21 ]]; then
         PACKAGES+=" crossbuild-essential-amd64"
     fi
 else

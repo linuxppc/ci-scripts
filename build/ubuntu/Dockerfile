@@ -19,6 +19,7 @@ RUN apt-get -q -y update && \
       cpio \
       crossbuild-essential-powerpc \
       gcc-multilib-powerpc-linux-gnu \
+      dwarves \
       file \
       flex \
       gcc \
@@ -44,12 +45,6 @@ RUN apt-get -q -y update && \
 
 COPY ubuntu/make-links.sh /tmp/make-links.sh
 RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
-
-RUN cd /tmp && \
-    git clone https://git.kernel.org/pub/scm/devel/sparse/sparse.git && \
-    sed -i -e "s/HAVE_LLVM:=.*/HAVE_LLVM:=no/" sparse/Makefile && \
-    make -C sparse PREFIX=/usr/local install && \
-    rm -rf sparse
 
 ARG uid
 ARG gid

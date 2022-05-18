@@ -10,9 +10,9 @@ if [[ $(id -u) != 0 ]]; then
 fi
 
 if [[ "$ID" == "fedora" ]]; then
-    (set -x; $sudo dnf -y install tar golang)
+    (set -x; $sudo dnf -y install glibc-static golang tar)
 elif [[ "$ID_LIKE" == "debian" ]]; then
-    (set -x; $sudo apt-get -y install tar golang-go)
+    (set -x; $sudo apt-get -y install libc6-dev golang-go tar)
 else
     echo "Unsupported distro!" >&2
     exit 1

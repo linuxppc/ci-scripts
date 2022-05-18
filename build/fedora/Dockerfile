@@ -8,6 +8,7 @@ RUN dnf -y install \
         ccache \
         cpio \
         diffutils \
+        dwarves \
         elfutils-libelf-devel \
         findutils \
         flex \

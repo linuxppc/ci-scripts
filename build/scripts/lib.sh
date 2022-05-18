@@ -27,15 +27,19 @@ function get_output_dir()
     local clang="$8"
     local d
 
-    if [[ -z "$script_base" || -z "$subarch" || -z "$distro" || -z "$version" ]]; then
+    if [[ -z "$script_base" || -z "$subarch" || -z "$distro" ]]; then
         echo "Error: not enough arguments to get_output_dir()" >&2
         return 1
     fi
 
     if [[ -n "$CI_OUTPUT" ]]; then
-        d="$CI_OUTPUT/$subarch@$distro@$version"
+        d="$CI_OUTPUT/$subarch@$distro"
     else
-        d="$script_base/../output/$subarch@$distro@$version"
+        d="$script_base/../output/$subarch@$distro"
+    fi
+
+    if [[ -n "$version" ]]; then
+        d="$d@$version"
     fi
 
     case "$task" in
@@ -72,7 +76,27 @@ function get_output_dir()
     return 0
 }
 
-grep "^NAME=Fedora$" /etc/os-release > /dev/null
+function get_default_version()
+{
+    local distro="$1"
+    local latest
+
+    case "$distro" in
+        ubuntu) latest="$UBUNTU_LATEST" ;;
+        fedora) latest="$FEDORA_LATEST" ;;
+    esac
+
+    if [[ -z "$latest" ]]; then
+        echo "Error: No default version for $distro" >&2
+        return 1
+    fi
+
+    echo "$latest"
+
+    return 0
+}
+
+podman --version > /dev/null
 if [[ $? -eq 0 ]]; then
     DOCKER="podman"
     PODMAN_OPTS="--security-opt label=disable --userns=keep-id"

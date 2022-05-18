@@ -1,5 +1,27 @@
 all: help
 
+export FEDORA_LATEST := 35
+export UBUNTU_LATEST := 22.04
+
+# If we're on ppc64le
+ifeq ($(shell uname -m),ppc64le)
+    # And we don't see ISA v3.0
+    ifeq ($(shell LD_SHOW_AUXV=1 /bin/true | grep "AT_HWCAP2:.*\barch_3_00\b"),)
+        # Then we can't use 22.04
+        UBUNTU_LATEST := 21.10
+    endif
+endif
+
+FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@34 fedora@33 fedora@31 fedora
+# Sort is to elimiate duplicates if UBUNTU_LATEST == 21.10
+UBUNTU_DISTROS := $(sort ubuntu@${UBUNTU_LATEST} ubuntu@21.10 ubuntu@21.04 ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu)
+KORG_DISTROS := korg@11.1.0 korg@10.3.0 korg@9.3.0 korg@8.1.0 korg@5.5.0
+ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
+DOCS_DISTRO := docs@${UBUNTU_LATEST}
+X86_DISTRO := ubuntu@${UBUNTU_LATEST}
+ALIAS_DISTROS := ubuntu fedora
+SUBARCHES := ppc64le ppc64 ppc
+
 VERSION:
 	@(git describe --always --long --dirty --abbrev=40) > VERSION
 
@@ -26,7 +48,7 @@ kernel@${1}@${2}: image@${1}@${2}
 clean-kernel@${1}@${2}:
 	@./scripts/clean.sh $$@
 
-KERNEL += kernel@${1}@${2}
+KERNEL += $(if $(filter-out ${ALIAS_DISTROS},${2}), kernel@${1}@${2})
 endef
 
 define SELFTESTS_TEMPLATE =
@@ -36,8 +58,8 @@ ppctests@${1}@${2} selftests@${1}@${2}: image@${1}@${2}
 clean-selftests@${1}@${2}:
 	@./scripts/clean.sh $$@
 
-PPCTESTS += ppctests@${1}@${2}
-SELFTESTS += selftests@${1}@${2}
+PPCTESTS += $(if $(filter-out ${ALIAS_DISTROS},${2}), ppctests@${1}@${2})
+SELFTESTS += $(if $(filter-out ${ALIAS_DISTROS},${2}), selftests@${1}@${2})
 endef
 
 define PERF_TEMPLATE =
@@ -47,7 +69,7 @@ perf@${1}@${2}: image@${1}@${2}
 clean-perf@${1}@${2}:
 	@./scripts/clean.sh $$@
 
-PERF += perf@${1}@${2}
+PERF += $(if $(filter-out ${ALIAS_DISTROS},${2}), perf@${1}@${2})
 endef
 
 define DOCS_TEMPLATE =
@@ -56,14 +78,6 @@ docs@${1}@${2}: image@${1}@${2}
 
 DOCS += docs@${1}@${2}
 endef
-
-FEDORA_DISTROS := fedora@35 fedora@34 fedora@33 fedora@31
-UBUNTU_DISTROS := ubuntu@21.10 ubuntu@21.04 ubuntu@20.10 ubuntu@20.04 ubuntu@18.04 ubuntu@16.04
-KORG_DISTROS := korg@11.1.0 korg@10.3.0 korg@9.3.0 korg@8.1.0 korg@5.5.0
-ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
-DOCS_DISTRO := docs@21.10
-X86_DISTRO := ubuntu@21.10
-SUBARCHES := ppc64le ppc64
 
 $(eval $(call MAIN_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 $(eval $(call DOCS_TEMPLATE,ppc64le,${DOCS_DISTRO}))
