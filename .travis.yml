@@ -17,6 +17,10 @@ jobs:
   include:
     - os:   linux
       arch: ppc64le
+      env:  SUBARCH=ppc64le IMAGE=ubuntu@22.04
+      name: ppc64le@ubuntu@22.04
+    - os:   linux
+      arch: ppc64le
       env:  SUBARCH=ppc64le IMAGE=ubuntu@21.10
       name: ppc64le@ubuntu@21.10
     - os:   linux
