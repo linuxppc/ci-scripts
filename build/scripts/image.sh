@@ -11,6 +11,10 @@ script_base="$(realpath "$dir")"
 
 IFS=@ read -r task subarch distro version <<< "$1"
 
+if [[ -z "$version" ]]; then
+    version=$(get_default_version $distro)
+fi
+
 image="docker.io/linuxppc/build:$distro-$version"
 
 if [[ "$task" == "image" ]]; then
