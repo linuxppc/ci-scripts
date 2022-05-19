@@ -15,7 +15,7 @@ endif
 FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@34 fedora@33 fedora@31 fedora
 # Sort is to elimiate duplicates if UBUNTU_LATEST == 21.10
 UBUNTU_DISTROS := $(sort ubuntu@${UBUNTU_LATEST} ubuntu@21.10 ubuntu@21.04 ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu)
-KORG_DISTROS := korg@11.1.0 korg@10.3.0 korg@9.3.0 korg@8.1.0 korg@5.5.0
+KORG_DISTROS := korg@12.1.0 korg@11.1.0 korg@10.3.0 korg@9.3.0 korg@8.1.0 korg@5.5.0
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@${UBUNTU_LATEST}
 X86_DISTRO := ubuntu@${UBUNTU_LATEST}
