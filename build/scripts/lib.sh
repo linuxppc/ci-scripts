@@ -98,9 +98,11 @@ function get_default_version()
 
 DOCKER="docker"
 PODMAN_OPTS=""
+DOCKER_REGISTRY=""
 if command -v podman > /dev/null; then
     if (command -v docker && docker --version | grep -q podman) > /dev/null || ! command -v docker > /dev/null; then
         DOCKER="podman"
         PODMAN_OPTS="--security-opt label=disable --userns=keep-id"
+        DOCKER_REGISTRY="docker.io/"
     fi
 fi

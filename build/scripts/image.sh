@@ -15,7 +15,7 @@ if [[ -z "$version" ]]; then
     version=$(get_default_version $distro)
 fi
 
-image="docker.io/linuxppc/build:$distro-$version"
+image="${DOCKER_REGISTRY}linuxppc/build:$distro-$version"
 
 if [[ "$task" == "image" ]]; then
     cmd="$DOCKER images -q --filter=reference=$image"
@@ -68,10 +68,10 @@ if [[ -z "$GID" ]]; then
     GID=$(id -g)
 fi
 
-from="docker.io/$distro:$version"
+from="${DOCKER_REGISTRY}$distro:$version"
 
 if [[ "$distro" == "docs" ]]; then
-    from="docker.io/ubuntu:$version"
+    from="${DOCKER_REGISTRY}ubuntu:$version"
 elif [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
 
@@ -82,9 +82,9 @@ elif [[ "$distro" == "korg" ]]; then
 
     # Use an older distro for the 5.x toolchains.
     if [[ "$version" == 5.* ]]; then
-	from="docker.io/ubuntu:16.04"
+	from="${DOCKER_REGISTRY}ubuntu:16.04"
     else
-	from="docker.io/ubuntu:20.04"
+	from="${DOCKER_REGISTRY}ubuntu:20.04"
     fi
 fi
 
