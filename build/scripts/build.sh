@@ -22,17 +22,49 @@ SRC=$(realpath "$SRC")
 
 alternate_binds=$(get_alternate_binds)
 
-arch=powerpc
-if [[ "$subarch" == "ppc64le" ]]; then
+arch=$subarch
+if [[ "$subarch" == "alpha" ]]; then
+    cross="alpha-linux-gnu-"
+elif [[ "$subarch" == "arm" ]]; then
+    cross="arm-linux-gnueabihf-"
+elif [[ "$subarch" == "arm64" ]]; then
+    cross="aarch64-linux-gnu-"
+elif [[ "$subarch" == "i686" ]]; then
+    cross="i686-linux-gnu-"
+    arch=x86
+elif [[ "$subarch" == "m68k" ]]; then
+    cross="m68k-linux-gnu-"
+elif [[ "$subarch" == "mips64" ]]; then
+    cross="mips64el-linux-gnuabi64-"
+    arch=mips
+elif [[ "$subarch" == "mips" ]]; then
+    cross="mipsel-linux-gnu-"
+elif [[ "$subarch" == "riscv" ]]; then
+    cross="riscv64-linux-gnu-"
+elif [[ "$subarch" == "s390" ]]; then
+    cross="s390x-linux-gnu-"
+elif [[ "$subarch" == "sh" ]]; then
+    cross="sh4-linux-gnu-"
+elif [[ "$subarch" == "sparc" ]]; then
+    cross="sparc64-linux-gnu-"
+elif [[ "$subarch" == "x86_64" ]]; then
+    cross="x86_64-linux-gnu-"
+    arch=x86
+elif [[ "$subarch" == "ppc64le" ]]; then
     # No cross compiler for fedora ppc64le on ppc64le
     if [[ "$distro" != "fedora" || $(uname -m) != "ppc64le" ]]; then
 	cross="powerpc64le-linux-gnu-"
     fi
-elif [[ "$subarch" == "x86_64" ]]; then
-    cross="x86_64-linux-gnu-"
-    arch=x86
-else
+    arch=powerpc
+elif [[ "$subarch" == "ppc64" ]]; then
     cross="powerpc64-linux-gnu-"
+    arch=powerpc
+elif [[ "$subarch" == "ppc" ]]; then
+    cross="powerpc-linux-gnu-"
+    arch=powerpc
+else
+    echo "Error: unknown subarch: $subarch" >&2
+    exit 1
 fi
 
 cmd="$DOCKER run --rm "

@@ -72,6 +72,8 @@ from="${DOCKER_REGISTRY}$distro:$version"
 
 if [[ "$distro" == "docs" ]]; then
     from="${DOCKER_REGISTRY}ubuntu:$version"
+elif [[ "$distro" == "ubuntu-allcross" ]]; then
+	from="${DOCKER_REGISTRY}linuxppc/build:ubuntu-$version-$(uname -m)"
 elif [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
 

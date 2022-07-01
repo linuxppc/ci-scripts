@@ -83,6 +83,7 @@ function get_default_version()
 
     case "$distro" in
         ubuntu) latest="$UBUNTU_LATEST" ;;
+        ubuntu-allcross) latest="$UBUNTU_LATEST" ;;
         fedora) latest="$FEDORA_LATEST" ;;
     esac
 
