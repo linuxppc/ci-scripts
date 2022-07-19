@@ -127,18 +127,19 @@ def test_harness(func, name, *args, **kwargs):
 
 
 def filter_log_warnings(infile, outfile):
-    import yaml
+    from configparser import ConfigParser
     import re
 
     base = os.path.dirname(sys.argv[0])
-    path = os.path.join(base, '../etc/filters.yaml')
+    path = os.path.join(base, '../etc/filters.ini')
     if not os.path.exists(path):
-        path = os.path.join(base, '../../etc/filters.yaml')
+        path = os.path.join(base, '../../etc/filters.ini')
 
-    settings = yaml.safe_load(open(path)).get('warnings', {})
-    suppressions = settings.get('suppressions', [])
-    strings  = settings.get('strings', [])
-    patterns = settings.get('patterns', [])
+    parser = ConfigParser()
+    parser.read_file(open(path))
+    suppressions = [t[1] for t in parser.items('suppressions', [])]
+    strings  = [t[1] for t in parser.items('strings', [])]
+    patterns = [t[1] for t in parser.items('patterns', [])]
     patterns = [re.compile(p) for p in patterns]
 
     found = False

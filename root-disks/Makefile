@@ -5,6 +5,7 @@ IMAGES += ubuntu16.04-cloudimg-ppc64el.qcow2
 IMAGES += ubuntu21.04-cloudimg-ppc64el.qcow2
 IMAGES += ubuntu21.10-cloudimg-ppc64el.qcow2
 IMAGES += fedora34-cloudimg-ppc64le.qcow2
+IMAGES += fedora36-cloudimg-ppc64le.qcow2
 
 build: prepare cloud-init-user-data.img
 
@@ -58,8 +59,17 @@ ubuntu21.10-cloudimg-ppc64el.qcow2:
 	chmod a-w $@
 	sha256sum $@ > $@.sum
 
+define wget_fedora
+	$(call wget,$(1),"https://download.fedoraproject.org/pub/fedora-secondary/releases/$(2)/Cloud/ppc64le/images/$(3)")
+endef
+
 fedora34-cloudimg-ppc64le.qcow2:
-	$(call wget,$@,"https://download.fedoraproject.org/pub/fedora-secondary/releases/34/Cloud/ppc64le/images/Fedora-Cloud-Base-34-1.2.ppc64le.qcow2")
+	$(call wget_fedora,$@,34,Fedora-Cloud-Base-34-1.2.ppc64le.qcow2)
+	chmod a-w $@
+	sha256sum $@ > $@.sum
+
+fedora36-cloudimg-ppc64le.qcow2:
+	$(call wget_fedora,$@,36,Fedora-Cloud-Base-36-1.5.ppc64le.qcow2)
 	chmod a-w $@
 	sha256sum $@ > $@.sum
 

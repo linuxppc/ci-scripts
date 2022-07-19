@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export CPU=POWER9
+export CPU=POWER10
 export ACCEL=tcg
 export CLOUD_IMAGE=ubuntu16.04-cloudimg-ppc64el.qcow2
 

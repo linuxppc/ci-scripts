@@ -47,7 +47,8 @@ def get_qemu_version(emulator):
 
 def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=None,
                  mem='1G', smp=1, vmlinux=None, initrd=None, drive=None,
-                 host_mount=None, cmdline='', accel='tcg', net='-nic user', gdb=None):
+                 host_mount=None, cmdline='', accel='tcg', net='-nic user', gdb=None,
+                 extra_args=[]):
 
     qemu_path = get_qemu(qemu)
     logging.info('Using qemu version %s.%s' % get_qemu_version(qemu_path))
@@ -85,7 +86,12 @@ def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=No
         l.append(drive)
 
     if host_mount:
-        l.append(f'-virtfs local,path={host_mount},mount_tag=host,security_model=none')
+        bus = ''
+        if 'powernv' in machine:
+            bus = ',bus=pcie.0'
+
+        l.append(f'-fsdev local,id=fsdev0,path={host_mount},security_model=none')
+        l.append(f'-device virtio-9p-pci,fsdev=fsdev0,mount_tag=host{bus}')
 
     if cpu is not None:
         l.append('-cpu')
@@ -97,6 +103,8 @@ def qemu_command(qemu='qemu-system-ppc64', machine='pseries,cap-htm=off', cpu=No
 
     if gdb:
         l.append(gdb)
+
+    l.extend(extra_args)
 
     logging.debug(l)
 
@@ -135,9 +143,6 @@ def qemu_main(qemu_machine, cpuinfo_platform, cpu, net, args):
 
     cloud_image = os.environ.get('CLOUD_IMAGE', False)
     if cloud_image:
-        setup_timeout(600)
-        boot_timeout = 300
-
         # Create snapshot image
         rdpath = get_root_disk_path()
         src = f'{rdpath}/{cloud_image}'
@@ -166,9 +171,14 @@ def qemu_main(qemu_machine, cpuinfo_platform, cpu, net, args):
         drive += f'-drive file={dst},format=qcow2,if={interface},id=drive0 ' \
                  f'-drive file={rdpath}/cloud-init-user-data.img,format=raw,if={interface},readonly=on,id=drive1'
     else:
-        setup_timeout(120)
-        boot_timeout = 120
         drive = None
+
+    extra_args = []
+    if 'pseries' in qemu_machine:
+        if accel == 'kvm':
+            extra_args = ['-device spapr-rng,use-kvm=true']
+        else:
+            extra_args = ['-device spapr-rng,rng=rng0 -object rng-random,filename=/dev/urandom,id=rng0']
 
     host_mount = os.environ.get('QEMU_HOST_MOUNT', '')
     if host_mount and not os.path.isdir(host_mount):
@@ -177,32 +187,35 @@ def qemu_main(qemu_machine, cpuinfo_platform, cpu, net, args):
 
     cmdline += get_env_var('LINUX_CMDLINE', '')
 
-    p = PexpectHelper()
+    # Default timeout for a single pexpect call
+    pexpect_timeout = int(get_env_var('QEMU_PEXPECT_TIMEOUT', 60))
 
+    gdb = None
     if '--gdb' in args:
         gdb = '-s -S'
-        p.timeout = None
-        boot_timeout = None
-        setup_timeout(0)
-    else:
-        gdb = None
+        pexpect_timeout = 0
 
     cmd = qemu_command(machine=qemu_machine, cpu=cpu, mem='4G', smp=smp, vmlinux=vmlinux,
                        drive=drive, host_mount=host_mount, cmdline=cmdline, accel=accel,
-                       net=net, gdb=gdb)
+                       net=net, gdb=gdb, extra_args=extra_args)
 
     if '--interactive' in args:
         logging.info("Running interactively ...")
-        setup_timeout(0)
         rc = subprocess.run(cmd, shell=True).returncode
         return rc == 0
 
-    p.spawn(cmd, logfile=open('console.log', 'w'))
+    setup_timeout(10 * pexpect_timeout)
+    boot_timeout = pexpect_timeout * 5
+
+    logpath = get_env_var('QEMU_CONSOLE_LOG', 'console.log')
+
+    p = PexpectHelper()
+    p.spawn(cmd, logfile=open(logpath, 'w'), timeout=pexpect_timeout)
 
     if cloud_image:
         standard_boot(p, prompt=prompt, login=True, password='linuxppc', timeout=boot_timeout)
     else:
-        standard_boot(p)
+        standard_boot(p, timeout=boot_timeout)
 
     p.send("echo -n 'booted-revision: '; uname -r")
     p.expect(f'booted-revision: {expected_release}')
@@ -229,8 +242,8 @@ def qemu_main(qemu_machine, cpuinfo_platform, cpu, net, args):
     p.send('halt')
     p.wait_for_exit(timeout=boot_timeout)
 
-    if filter_log_warnings(open('console.log'), open('warnings.txt', 'w')):
-        logging.error('Errors/warnings seen in console.log')
+    if filter_log_warnings(open(logpath), open('warnings.txt', 'w')):
+        logging.error('Errors/warnings seen in console log')
         return False
 
     logging.info('Test completed OK')

@@ -19,7 +19,9 @@ KORG_DISTROS := korg@12.1.0 korg@11.1.0 korg@10.3.0 korg@9.3.0 korg@8.1.0 korg@5
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@${UBUNTU_LATEST}
 X86_DISTRO := ubuntu@${UBUNTU_LATEST}
-ALIAS_DISTROS := ubuntu fedora
+ALIAS_DISTROS := ubuntu ubuntu-allcross fedora
+ALLCROSS_DISTROS := ubuntu-allcross@${UBUNTU_LATEST} ubuntu-allcross
+ALL_ARCHES := alpha arm arm64 i686 m68k mips mips64 riscv s390 sh sparc x86_64
 SUBARCHES := ppc64le ppc64 ppc
 
 VERSION:
@@ -112,6 +114,15 @@ $(foreach distro,${FEDORA_DISTROS}, \
 	$(eval $(call SELFTESTS_TEMPLATE,ppc64le,${distro})) \
 )
 endif
+
+$(foreach distro,${ALLCROSS_DISTROS}, \
+	$(foreach subarch,${ALL_ARCHES}, \
+		$(eval $(call MAIN_TEMPLATE,${subarch},${distro})) \
+	) \
+	$(foreach subarch,${ALL_ARCHES}, \
+		$(eval $(call KERNEL_TEMPLATE,${subarch},${distro})) \
+	) \
+)
 
 clean: ${CLEAN}
 	rm -f VERSION

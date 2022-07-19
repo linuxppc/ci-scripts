@@ -32,8 +32,10 @@ def main():
     cpu = get_env_var('CPU', 'POWER8')
     if cpu == 'POWER8':
         machine = 'powernv8'
-    else:
+    elif cpu == 'POWER9':
         machine = 'powernv9'
+    else:
+        machine = 'powernv10'
 
     return qemu_main(machine, 'IBM PowerNV \(emulated by qemu\)', cpu,
                      net='-netdev user,id=net0 -device e1000e,netdev=net0',
