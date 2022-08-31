@@ -5,7 +5,7 @@ help:
 	@echo "  prepare 	# download and install dependencies"
 	@echo "  test 		# run the test"
 
-version = 5.14
+version = 5.18
 tarball = strace.tar.xz
 
 download: $(tarball)

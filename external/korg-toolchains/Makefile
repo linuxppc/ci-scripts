@@ -1,7 +1,9 @@
 help:
 	@echo "korg-toolchains"
 	@echo "Available targets:"
-	@echo "  download       # download and unpack toolchains"
+	@echo "  download              # download and unpack toolchains"
+	@echo '  download-all-$$arch    # download all toolchains for arch'
+	@echo '  download-all-$$version # download all toolchains for version'
 	@echo ""
 	@echo "Download additional toolchains with:"
 	@echo "  $ make gcc-<version>-nolibc/<arch>-linux"
@@ -15,6 +17,10 @@ gcc-$(1)-nolibc/$(2)-linux:
 	tar -xf gcc-$(1)-nolibc-$(2)-linux.tar.xz
 	touch $$@
 	rm gcc-$(1)-nolibc-$(2)-linux.tar.xz
+
+ALL_version_$(1) += gcc-$(1)-nolibc/$(2)-linux
+ALL_arch_$(2) += gcc-$(1)-nolibc/$(2)-linux
+ALL_TARGETS += gcc-$(1)-nolibc/$(2)-linux
 endef
 
 ARCHES := alpha \
@@ -44,7 +50,23 @@ ARCHES := alpha \
 	x86_64 \
 	xtensa
 
-VERSIONS := 11.1.0 5.5.0
+VERSIONS := 12.1.0 \
+	11.3.0 \
+	11.1.0 \
+	10.3.0 \
+	10.1.0 \
+	9.4.0 \
+	9.3.0 \
+	9.2.0 \
+	8.5.0 \
+	8.4.0 \
+	8.3.0 \
+	8.1.0 \
+	7.5.0 \
+	7.3.0 \
+	6.5.0 \
+	6.4.0 \
+	5.5.0
 
 $(foreach arch,${ARCHES}, \
 	$(foreach version,${VERSIONS}, \
@@ -52,6 +74,15 @@ $(foreach arch,${ARCHES}, \
 	) \
 )
 
+$(foreach arch,${ARCHES}, \
+	$(eval download-all-$(arch): $(ALL_arch_$(arch))) \
+)
+
+$(foreach version,${VERSIONS}, \
+	$(eval download-all-$(version): $(ALL_version_$(version))) \
+)
+
+download-all: $(ALL_TARGETS)
 
 CLEAN_DIRS := $(patsubst %,gcc-%-nolibc,$(VERSIONS))
 
@@ -66,6 +97,6 @@ clean:
 	@:
 
 distclean: clean
-	rm -rf $(CLEAN_DIRS)
+	rm -rf $(CLEAN_DIRS) *.tar.xz
 
 .PHONY: download prepare build clean distclean help

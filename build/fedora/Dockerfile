@@ -6,6 +6,7 @@ RUN dnf -y install \
         bison \
         bzip2 \
         ccache \
+        clang \
         cpio \
         diffutils \
         dwarves \
