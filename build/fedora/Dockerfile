@@ -21,10 +21,13 @@ RUN dnf -y install \
         glibc-static \
         hostname \
         kmod \
+        libmpc-devel \
         lz4 \
         lzop \
         make \
+        openssl \
         openssl-devel \
+        perl \
         prename \
         rsync \
         sparse \
