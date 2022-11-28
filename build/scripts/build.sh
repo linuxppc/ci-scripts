@@ -142,6 +142,10 @@ if [[ "$task" == "kernel" ]]; then
     if [[ -n "$CLANG" ]]; then
         cmd+="-e CLANG=1 "
     fi
+
+    if [[ -n "$LLVM_IAS" ]]; then
+        cmd+="-e LLVM_IAS=$LLVM_IAS "
+    fi
 fi
 
 if [[ "$task" == "ppctests" ]]; then

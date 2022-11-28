@@ -26,52 +26,20 @@ import logging
 import os, sys
 sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
 
-from qemu import qemu_command, qemu_net_setup
-from pexpect_utils import *
-from utils import *
+from qemu import QemuConfig, qemu_main
+from utils import setup_logging
 
 
 def main():
     setup_logging()
-    setup_timeout(60)
 
-    expected_release = get_expected_release()
-    if expected_release is None:
-        return False
+    qconf = QemuConfig('g3beige')
+    qconf.configure_from_env()
+    qconf.configure_from_args(sys.argv[1:])
+    qconf.smp = 1
+    qconf.apply_defaults()
 
-    vmlinux = get_vmlinux()
-    if vmlinux is None:
-        return False
-
-    p = PexpectHelper()
-    cmd = qemu_command(qemu='qemu-system-ppc', machine='g3beige', vmlinux=vmlinux, cmdline='noreboot')
-    p.spawn(cmd, logfile=open('console.log', 'w'))
-
-    standard_boot(p)
-
-    p.send("echo -n 'booted-revision: '; uname -r")
-    p.expect(f'booted-revision: {expected_release}')
-    p.expect_prompt()
-
-    p.send('cat /proc/cpuinfo')
-    p.expect('AAPL,PowerMac G3 MacRISC')
-    p.expect_prompt()
-
-    if os.environ.get('QEMU_NET_TESTS', True) != '0':
-        qemu_net_setup(p)
-        ping_test(p)
-        wget_test(p)
-
-    p.send('halt')
-    p.wait_for_exit()
-
-    if filter_log_warnings(open('console.log'), open('warnings.txt', 'w')):
-        logging.error('Errors/warnings seen in console.log')
-        return False
-
-    logging.info('Test completed OK')
-
-    return True
+    return qemu_main(qconf)
 
 
 sys.exit(0 if main() else 1)

@@ -22,23 +22,18 @@
 import os, sys
 sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
 
-from qemu import qemu_main
-from utils import setup_logging, get_env_var
+from qemu import QemuConfig, qemu_main
+from utils import setup_logging
 
 
 def main():
     setup_logging()
 
-    cpu = get_env_var('CPU', 'POWER8')
-    if cpu == 'POWER8':
-        machine = 'powernv8'
-    elif cpu == 'POWER9':
-        machine = 'powernv9'
-    else:
-        machine = 'powernv10'
+    qconf = QemuConfig('powernv')
+    qconf.configure_from_env()
+    qconf.configure_from_args(sys.argv[1:])
+    qconf.apply_defaults()
 
-    return qemu_main(machine, 'IBM PowerNV \(emulated by qemu\)', cpu,
-                     net='-netdev user,id=net0 -device e1000e,netdev=net0',
-                     args=sys.argv[1:])
+    return qemu_main(qconf)
 
 sys.exit(0 if main() else 1)

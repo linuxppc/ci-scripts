@@ -23,7 +23,7 @@ class PexpectHelper:
         self.bug_patterns = self.default_bug_patterns
 
     def spawn(self, *args, **kwargs):
-        logging.info("Spawning '%s'" % args)
+        logging.debug("Spawning '%s'" % args)
         self.child = pexpect.spawn(*args, encoding='utf-8', echo=False, **kwargs)
         if '--quiet' not in sys.argv:
             self.log_to(sys.stdout)

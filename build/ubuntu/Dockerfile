@@ -7,6 +7,9 @@ ARG apt_mirror
 ENV apt_mirror=${apt_mirror}
 RUN [ -n "$apt_mirror" ] && sed -i -e "s|ports.ubuntu.com|$apt_mirror|" /etc/apt/sources.list || true
 
+# Deal with Ubuntu 21.10 repos moving to old-releases (ppc64le only)
+RUN [ "$from" = "ubuntu:21.10" ] && sed -i -e "s|ports.ubuntu.com/ubuntu-ports|old-releases.ubuntu.com/ubuntu|" /etc/apt/sources.list || true
+
 RUN apt-get -q -y update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get -q -y install --no-install-recommends \

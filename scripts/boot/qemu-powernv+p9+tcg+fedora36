@@ -2,6 +2,6 @@
 
 export CPU=POWER9
 export ACCEL=tcg
-export CLOUD_IMAGE=ubuntu16.04-cloudimg-ppc64el.qcow2
+export CLOUD_IMAGE=fedora36-cloudimg-ppc64le.qcow2
 
 exec "$(dirname "$0")"/qemu-powernv $@

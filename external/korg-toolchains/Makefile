@@ -50,7 +50,8 @@ ARCHES := alpha \
 	x86_64 \
 	xtensa
 
-VERSIONS := 12.1.0 \
+VERSIONS := 12.2.0 \
+	12.1.0 \
 	11.3.0 \
 	11.1.0 \
 	10.3.0 \
@@ -86,8 +87,8 @@ download-all: $(ALL_TARGETS)
 
 CLEAN_DIRS := $(patsubst %,gcc-%-nolibc,$(VERSIONS))
 
-# Only download powerpc 11.1.0 & 5.5.0 by default
-download: gcc-11.1.0-nolibc/powerpc64-linux gcc-5.5.0-nolibc/powerpc64-linux
+# Only download powerpc 12.2.0 & 5.5.0 by default
+download: gcc-12.2.0-nolibc/powerpc64-linux gcc-5.5.0-nolibc/powerpc64-linux
 
 prepare: download
 
