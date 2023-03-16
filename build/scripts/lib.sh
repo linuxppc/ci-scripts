@@ -33,13 +33,9 @@ function get_output_dir()
     fi
 
     if [[ -n "$CI_OUTPUT" ]]; then
-        d="$CI_OUTPUT/$subarch@$distro"
+        d="$CI_OUTPUT"
     else
-        d="$script_base/../output/$subarch@$distro"
-    fi
-
-    if [[ -n "$version" ]]; then
-        d="$d@$version"
+        d="$script_base/../output"
     fi
 
     case "$task" in
@@ -68,7 +64,16 @@ function get_output_dir()
     esac
 
     if [[ -n "$clang" ]]; then
-	d="${d}_clang"
+        # Append "+clang" if it's not already part of the defconfig name
+        if [[ "$defconfig" != *"+"* ]]; then
+            d="${d}+clang"
+        fi
+    fi
+
+    d="$d@$subarch@$distro"
+
+    if [[ -n "$version" ]]; then
+        d="$d@$version"
     fi
 
     echo "$d"

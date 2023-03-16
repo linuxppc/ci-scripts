@@ -66,11 +66,12 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - `ubuntu@20.04`: Ubuntu 20.04, gcc 9.4.0, binutils 2.34
  - `ubuntu@18.04`: Ubuntu 18.04, gcc 7.5.0, binutils 2.30
  - `ubuntu@16.04`: Ubuntu 16.04, gcc 5.4.0, binutils 2.26.1
- - `fedora@36`: Fedora 36, gcc 12.1.1, binutils 2.37-7
- - `fedora@35`: Fedora 35, gcc 11.2.1, binutils 2.37-3
- - `fedora@34`: Fedora 34, gcc 11.2.1, binutils 2.35.2
- - `fedora@33`: Fedora 33, gcc 10.2.1, binutils 2.35.1
- - `fedora@31`: Fedora 31, gcc 9.2.1, binutils 2.32
+ - `fedora@37`: Fedora 37, gcc 12.2.1, binutils 2.38-5, clang 15.0.7
+ - `fedora@36`: Fedora 36, gcc 12.1.1, binutils 2.37-7, clang 14.0.5
+ - `fedora@35`: Fedora 35, gcc 11.2.1, binutils 2.37-3, clang 13.0.1
+ - `fedora@34`: Fedora 34, gcc 11.2.1, binutils 2.35.2, clang 12.0.1
+ - `fedora@33`: Fedora 33, gcc 10.2.1, binutils 2.35.1, clang 11.0.0
+ - `fedora@31`: Fedora 31, gcc 9.2.1, binutils 2.32, clang 9.0.1
  
 Only the Ubuntu toolchains can build the selftests.
 

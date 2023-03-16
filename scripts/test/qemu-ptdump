@@ -1,0 +1,76 @@
+#!/usr/bin/python3
+#
+# Test that ptdump works
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, kvm_or_tcg
+from utils import setup_logging, test_harness
+from dump import read_symbols, find_symbol
+
+
+def test(name, cpu, machine):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '2G'
+    qconf.smp = 1
+    qconf.cpu = cpu
+    qconf.accel = kvm_or_tcg(machine, cpu)
+
+    syms = read_symbols(qconf.vmlinux)
+
+    start = find_symbol(syms, '__start')
+
+    boundary = find_symbol(syms, '__srwx_boundary')
+    if boundary is None:
+        boundary = find_symbol(syms, '__init_begin')
+
+    if start is None or boundary is None:
+        logging.error("Can't determine SRWX boundary?")
+        return False
+
+
+    def test(p):
+        p.cmd('mount -t debugfs none /sys/kernel/debug')
+        p.send('cat /sys/kernel/debug/kernel_page_tables')
+        i = p.expect(["can't open '/sys/kernel/debug/kernel_page_tables': No such file or directory",
+                    "Start of kernel VM"])
+
+        if i == 0:
+            logging.error("Kernel not built with CONFIG_PTDUMP_DEBUGFS?")
+            return False
+
+        if cpu == 'power9':
+            p.expect("---[ Start of kernel VM ]---")
+            p.expect("0xc000000000000000-0xc000000001ffffff  0x0000000000000000        32M         r      X   pte  valid  present        dirty  accessed")
+            p.expect("0xc000000002000000-0xc00000007fffffff  0x0000000002000000      2016M         r  w       pte  valid  present        dirty  accessed")
+            p.expect("---[ vmalloc() Area ]---")
+            # vmalloc/IO mappings change so skip those
+            p.expect("---[ vmemmap start ]---")
+            p.expect("0xc00c000000000000-0xc00c0000001fffff  0x000000006e000000         2M         r  w       pte  valid  present        dirty  accessed")
+        elif cpu == 'power8':
+            p.cmd('cat /sys/kernel/debug/kernel_hash_pagetable | head')
+
+        p.expect_prompt()
+
+    qconf.callback = test
+    qconf.apply_defaults()
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    rc = True
+    rc &= test_harness(test, 'ptdump', cpu='power8', machine='pseries')
+    rc &= test_harness(test, 'ptdump', cpu='power9', machine='pseries')
+
+    return rc
+
+
+sys.exit(0 if main() else 1)

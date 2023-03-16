@@ -34,23 +34,61 @@ elif [[ "$task" == "pull-image" ]]; then
 	exit $?
     fi
 
+    # Tag the arch specific image with the generic tag
     cmd="$DOCKER tag $arch_image $image"
     (set -x; $cmd)
+    if [[ $? -ne 0 ]]; then
+        echo "Error: tagging $arch_image as $image?" >&2
+        exit 1
+    fi
 
-    exit $?
+    # Remove the arch tag (not the whole image)
+    cmd="$DOCKER rmi $arch_image"
+    (set -x; $cmd)
+    if [[ $? -ne 0 ]]; then
+        echo "Error: untagging $arch_image?" >&2
+        exit 1
+    fi
+
+    exit 0
 elif [[ "$task" == "push-image" ]]; then
     if [[ -n "$DOCKER_PASSWORD" && -n "$DOCKER_USER" ]]; then
 	cmd="$DOCKER login -u $DOCKER_USER -p $DOCKER_PASSWORD"
 	(set -x; $cmd)
     fi
 
-    image="$image-$(uname -m)"
-    cmd="$DOCKER push $image"
+    # Temporarily tag the image with the arch
+    arch_image="$image-$(uname -m)"
+    cmd="$DOCKER tag $image $arch_image"
     (set -x; $cmd)
-    exit $?
+    if [[ $? -ne 0 ]]; then
+        echo "Error: tagging $image as $arch_image?" >&2
+        exit 1
+    fi
+
+    cmd="$DOCKER push $arch_image"
+    (set -x; $cmd)
+    if [[ $? -ne 0 ]]; then
+        echo "Error: pushing $arch_image?" >&2
+        exit 1
+    fi
+
+    # Remove the arch tag (not the whole image)
+    cmd="$DOCKER rmi $arch_image"
+    (set -x; $cmd)
+    if [[ $? -ne 0 ]]; then
+        echo "Error: untagging $arch_image?" >&2
+        exit 1
+    fi
+
+    exit 0
 fi
 
-cmd="$DOCKER build --pull -f $distro/Dockerfile "
+cmd="$DOCKER build -f $distro/Dockerfile "
+
+if [[ "$distro" != "ubuntu-allcross" ]]; then
+    cmd+="--pull "
+fi
 
 if [[ -n "$http_proxy" ]]; then
     cmd+="--build-arg http_proxy=$http_proxy "
@@ -73,7 +111,7 @@ from="${DOCKER_REGISTRY}$distro:$version"
 if [[ "$distro" == "docs" ]]; then
     from="${DOCKER_REGISTRY}ubuntu:$version"
 elif [[ "$distro" == "ubuntu-allcross" ]]; then
-	from="${DOCKER_REGISTRY}linuxppc/build:ubuntu-$version-$(uname -m)"
+	from="${DOCKER_REGISTRY}linuxppc/build:ubuntu-$version"
 elif [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
 
@@ -94,7 +132,6 @@ cmd+="--build-arg uid=$UID "
 cmd+="--build-arg gid=$GID "
 cmd+="--build-arg from=$from "
 cmd+="--build-arg apt_mirror=$APT_MIRROR "
-cmd+="-t $image-$(uname -m) "
 cmd+="-t $image ."
 
 (set -x; $cmd)

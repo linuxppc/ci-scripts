@@ -1,6 +1,6 @@
 all: help
 
-export FEDORA_LATEST := 36
+export FEDORA_LATEST := 37
 export UBUNTU_LATEST := 22.04
 
 # If we're on ppc64le
@@ -12,7 +12,7 @@ ifeq ($(shell uname -m),ppc64le)
     endif
 endif
 
-FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@35 fedora@34 fedora@33 fedora@31 fedora
+FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
 UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu
 KORG_DISTROS := korg@12.1.0 korg@11.3.0 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 korg@8.1.0 korg@5.5.0
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}

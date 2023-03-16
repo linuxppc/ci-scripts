@@ -6,6 +6,7 @@ IMAGES += ubuntu21.04-cloudimg-ppc64el.qcow2
 IMAGES += ubuntu21.10-cloudimg-ppc64el.qcow2
 IMAGES += fedora34-cloudimg-ppc64le.qcow2
 IMAGES += fedora36-cloudimg-ppc64le.qcow2
+IMAGES += debian-sid-powerpc.qcow2
 
 build: prepare cloud-init-user-data.img
 
@@ -70,6 +71,12 @@ fedora34-cloudimg-ppc64le.qcow2:
 
 fedora36-cloudimg-ppc64le.qcow2:
 	$(call wget_fedora,$@,36,Fedora-Cloud-Base-36-1.5.ppc64le.qcow2)
+	chmod a-w $@
+	sha256sum $@ > $@.sum
+
+debian-sid-powerpc.qcow2:
+	$(call wget,$@.xz,"https://michael.ellerman.id.au/files/debian-sid-powerpc.qcow2.xz")
+	unxz $@.xz
 	chmod a-w $@
 	sha256sum $@ > $@.sum
 

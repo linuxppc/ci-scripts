@@ -1,7 +1,7 @@
 ARG from
 FROM ${from}
 
-RUN dnf -y install \
+RUN dnf -y install --setopt=install_weak_deps=False \
         bc \
         bison \
         bzip2 \
@@ -22,6 +22,8 @@ RUN dnf -y install \
         hostname \
         kmod \
         libmpc-devel \
+        lld \
+        llvm \
         lz4 \
         lzop \
         make \

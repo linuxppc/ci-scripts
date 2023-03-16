@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+#
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, qemu_supports_p10, kvm_or_tcg
+from utils import setup_logging, test_harness
+
+triggers = ['BUG', 'WARNING', 'WARNING_MESSAGE', 'EXCEPTION', 'ARRAY_BOUNDS',
+         'CORRUPT_LIST_ADD', 'CORRUPT_LIST_DEL', 'REPORT_STACK_CANARY',
+         'UNALIGNED_LOAD_STORE_WRITE', 'SLAB_LINEAR_OVERFLOW', 'VMALLOC_LINEAR_OVERFLOW',
+         'READ_AFTER_FREE', 'READ_BUDDY_AFTER_FREE', 'SLAB_INIT_ON_ALLOC',
+         'BUDDY_INIT_ON_ALLOC', 'SLAB_FREE_DOUBLE', 'SLAB_FREE_CROSS', 'SLAB_FREE_PAGE',
+         'EXEC_DATA', 'EXEC_STACK', 'EXEC_KMALLOC', 'EXEC_VMALLOC', 'EXEC_RODATA',
+         'EXEC_USERSPACE', 'EXEC_NULL', 'ACCESS_USERSPACE', 'ACCESS_NULL', 'WRITE_RO',
+         'WRITE_RO_AFTER_INIT', 'WRITE_KERN', 'WRITE_OPD', 'REFCOUNT_INC_OVERFLOW',
+         'REFCOUNT_ADD_OVERFLOW', 'REFCOUNT_INC_NOT_ZERO_OVERFLOW',
+         'REFCOUNT_ADD_NOT_ZERO_OVERFLOW', 'REFCOUNT_DEC_ZERO', 'REFCOUNT_DEC_NEGATIVE',
+         'REFCOUNT_DEC_AND_TEST_NEGATIVE', 'REFCOUNT_SUB_AND_TEST_NEGATIVE',
+         'REFCOUNT_INC_ZERO', 'REFCOUNT_ADD_ZERO', 'REFCOUNT_INC_SATURATED',
+         'REFCOUNT_DEC_SATURATED', 'REFCOUNT_ADD_SATURATED',
+         'REFCOUNT_INC_NOT_ZERO_SATURATED', 'REFCOUNT_ADD_NOT_ZERO_SATURATED',
+         'REFCOUNT_DEC_AND_TEST_SATURATED', 'REFCOUNT_SUB_AND_TEST_SATURATED',
+         'USERCOPY_SLAB_SIZE_TO', 'USERCOPY_SLAB_SIZE_FROM', 'USERCOPY_SLAB_WHITELIST_TO',
+         'USERCOPY_SLAB_WHITELIST_FROM', 'USERCOPY_STACK_FRAME_TO',
+         'USERCOPY_STACK_FRAME_FROM', 'USERCOPY_STACK_BEYOND', 'USERCOPY_KERNEL',
+         'FORTIFY_STRSCPY', 'FORTIFY_STR_OBJECT', 'FORTIFY_STR_MEMBER',
+         'FORTIFY_MEM_OBJECT', 'FORTIFY_MEM_MEMBER',
+]
+
+def test(name, cpu, machine):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '2G'
+    qconf.cpu = cpu
+    qconf.accel = kvm_or_tcg(machine, cpu)
+
+    def test(p):
+        p.cmd('mount -t debugfs none /sys/kernel/debug')
+
+        for trigger in triggers:
+            p.send(f"sh -c 'echo {trigger} > /sys/kernel/debug/provoke-crash/DIRECT'")
+            p.expect(p.prompt, bug_patterns=[])
+
+    qconf.callback = test
+    qconf.apply_defaults()
+
+    if cpu.upper() == 'POWER10' and not qemu_supports_p10(qconf.qemu_path):
+        return None
+
+    return qemu_main(qconf)
+
+
+def main(args):
+    setup_logging()
+
+    if len(args) > 0:
+        machine = args[0]
+    else:
+        machine = 'pseries'
+
+    if len(args) > 1:
+        cpus = [args[1]]
+    else:
+        cpus = ['power8', 'power9', 'power10']
+
+    rc = True
+    for cpu in cpus:
+        rc &= test_harness(test, 'lkdtm', cpu=cpu, machine=machine)
+
+    return rc
+
+
+sys.exit(0 if main(sys.argv[1:]) else 1)

@@ -120,6 +120,9 @@ def test_harness(func, name, *args, **kwargs):
 
     if rc:
         print('success: %s' % name)
+    elif rc is None:
+        print('skip: %s' % name)
+        rc = True
     else:
         print('failure: %s' % name)
 

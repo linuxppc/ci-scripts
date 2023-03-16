@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export CPU=POWER10
+export ACCEL=tcg
+export CLOUD_IMAGE=ubuntu21.10-cloudimg-ppc64el.qcow2
+
+exec "$(dirname "$0")"/qemu-powernv $@

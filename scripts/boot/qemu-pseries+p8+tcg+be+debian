@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export CPU=POWER8
+export ACCEL=tcg
+export CLOUD_IMAGE=debian-sid-powerpc.qcow2
+
+exec "$(dirname "$0")"/qemu-pseries $@

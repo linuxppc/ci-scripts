@@ -1,0 +1,82 @@
+#!/usr/bin/python3
+#
+# Test that basic xmon functions work
+
+import os
+import sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, qemu_supports_p10, kvm_or_tcg
+from utils import setup_logging, test_harness
+from pexpect_utils import xmon_enter, xmon_exit
+
+
+def test(name, cpu, machine):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '4G'
+    qconf.cpu = cpu
+    qconf.host_mounts = []
+    qconf.accel = kvm_or_tcg(machine, cpu)
+
+    if os.environ.get('QEMU_QUIET', None) is None:
+        qconf.quiet = True
+
+    def test_xmon(p):
+        xmon_enter(p)
+
+        p.send('e')
+        p.expect_prompt()
+
+        p.send('r')
+        p.expect_prompt()
+
+        p.send('t')
+        p.expect_prompt()
+
+        p.send('dp')
+        p.expect_prompt()
+
+        if cpu == 'POWER8':
+            p.send('dv c008000000000000')
+            p.expect_prompt()
+        else:
+            p.send('dv c000000000000000')
+            p.expect('Maps physical address = 0x0000000000000000')
+            p.expect_prompt()
+
+            p.send('dv c000000040000000')
+            p.expect('Maps physical address = 0x0000000040000000')
+            p.expect_prompt()
+
+            p.send('dv c00dffffffff0000')
+            p.expect('No valid P4D')
+            p.expect_prompt()
+
+        xmon_exit(p)
+
+    qconf.callback = test_xmon
+    qconf.apply_defaults()
+
+    if cpu == 'POWER10' and not qemu_supports_p10(qconf.qemu_path):
+        return None
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    cpus = os.environ.get('CPUS', 'POWER8:POWER9:POWER10').split(':')
+    machines = os.environ.get('QEMU_MACHINES', 'pseries:powernv').split(':')
+
+    rc = True
+    for machine in machines:
+        for cpu in cpus:
+            rc &= test_harness(test, 'xmon', cpu=cpu, machine=machine)
+
+    return rc
+
+
+sys.exit(0 if main() else 1)
