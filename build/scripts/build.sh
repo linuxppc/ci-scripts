@@ -187,7 +187,7 @@ if [[ -z "$version" ]]; then
     version=$(get_default_version $distro)
 fi
 
-image="${DOCKER_REGISTRY}linuxppc/build:$distro-$version"
+image="linuxppc/build:$distro-$version"
 
 cmd+="$image "
 cmd+="/bin/container-build.sh $task"

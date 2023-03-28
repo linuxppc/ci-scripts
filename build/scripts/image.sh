@@ -15,7 +15,7 @@ if [[ -z "$version" ]]; then
     version=$(get_default_version $distro)
 fi
 
-image="${DOCKER_REGISTRY}linuxppc/build:$distro-$version"
+image="linuxppc/build:$distro-$version"
 
 if [[ "$task" == "image" ]]; then
     cmd="$DOCKER images -q --filter=reference=$image"
@@ -26,7 +26,7 @@ if [[ "$task" == "image" ]]; then
     fi
 elif [[ "$task" == "pull-image" ]]; then
     arch_image="$image-$(uname -m)"
-    cmd="$DOCKER pull $arch_image"
+    cmd="$DOCKER pull ghcr.io/$arch_image"
     (set -x; $cmd)
 
     if [[ $? -ne 0 ]]; then
@@ -58,7 +58,7 @@ elif [[ "$task" == "push-image" ]]; then
     fi
 
     # Temporarily tag the image with the arch
-    arch_image="$image-$(uname -m)"
+    arch_image="ghcr.io/$image-$(uname -m)"
     cmd="$DOCKER tag $image $arch_image"
     (set -x; $cmd)
     if [[ $? -ne 0 ]]; then
@@ -106,12 +106,12 @@ if [[ -z "$GID" ]]; then
     GID=$(id -g)
 fi
 
-from="${DOCKER_REGISTRY}$distro:$version"
+from="docker.io/$distro:$version"
 
 if [[ "$distro" == "docs" ]]; then
-    from="${DOCKER_REGISTRY}ubuntu:$version"
+    from="docker.io/ubuntu:$version"
 elif [[ "$distro" == "ubuntu-allcross" ]]; then
-	from="${DOCKER_REGISTRY}linuxppc/build:ubuntu-$version"
+	from="linuxppc/build:ubuntu-$version"
 elif [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
 
@@ -122,9 +122,9 @@ elif [[ "$distro" == "korg" ]]; then
 
     # Use an older distro for the 5.x toolchains.
     if [[ "$version" == 5.* ]]; then
-	from="${DOCKER_REGISTRY}ubuntu:16.04"
+	from="docker.io/ubuntu:16.04"
     else
-	from="${DOCKER_REGISTRY}ubuntu:20.04"
+	from="docker.io/ubuntu:20.04"
     fi
 fi
 
