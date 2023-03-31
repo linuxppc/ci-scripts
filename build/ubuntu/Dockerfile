@@ -40,6 +40,7 @@ RUN apt-get -q -y update && \
       make \
       openssl \
       python3 \
+      python3-dev \
       u-boot-tools \
       rename \
       rsync \
