@@ -6,8 +6,6 @@ from utils import debug_level
 
 
 class PexpectHelper:
-    DEFAULT_PROMPT = "/ #"
-
     default_bug_patterns = [
         'Unable to handle kernel paging request',
         'Oops: Kernel access of bad area',
@@ -103,26 +101,28 @@ class PexpectHelper:
         self.expect_prompt()
 
 
-def standard_boot(p, login=False, user='root', password=None, timeout=-1, prompt=None):
-    if prompt is None:
-        prompt = p.DEFAULT_PROMPT
-
-    p.push_prompt(prompt)
-
+def standard_boot(p, login=False, user='root', password=None, timeout=-1):
     logging.info("Waiting for kernel to boot")
-    p.expect("Freeing unused kernel ", timeout=timeout)
+    i = p.expect([p.prompt, "login:", "Freeing unused kernel "], timeout=timeout)
 
-    if login:
-        logging.info("Kernel came up, waiting for login ...")
-        p.expect("login:", timeout=timeout)
+    if i == 0:
+        # We booted straight to a prompt, we're done
+        pass
+    elif login:
+        if i != 1:
+            logging.info("Kernel came up, waiting for login ...")
+            p.expect("login:", timeout=timeout)
+
         p.send(user)
         if password is not None:
             p.expect("Password:", timeout=timeout)
             p.send(password)
+
+        p.expect_prompt(timeout=timeout)
     else:
         logging.info("Kernel came up, waiting for prompt ...")
+        p.expect_prompt(timeout=timeout)
 
-    p.expect_prompt(timeout=timeout)
     logging.info("Booted to shell prompt")
 
 

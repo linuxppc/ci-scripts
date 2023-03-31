@@ -149,6 +149,10 @@ class QemuConfig:
                 self.cmdline += 'root=/dev/vda2 '
                 self.prompt = 'root@debian:~#'
 
+        if self.prompt is None:
+            # Default prompt for our root disks
+            self.prompt = "/ #"
+
         if self.initrd is None and self.drive is None and self.cloud_image is None:
             if self.compat_rootfs or self.qemu_path.endswith('qemu-system-ppc'):
                 subarch = 'ppc'
@@ -368,7 +372,8 @@ def qemu_main(qconf):
     p = PexpectHelper()
     p.spawn(cmd, logfile=open(qconf.logpath, 'w'), timeout=pexpect_timeout, quiet=qconf.quiet)
 
-    standard_boot(p, qconf.login, qconf.user, qconf.password, boot_timeout, qconf.prompt)
+    p.push_prompt(qconf.prompt)
+    standard_boot(p, qconf.login, qconf.user, qconf.password, boot_timeout)
 
     p.send('echo "booted-revision: `uname -r`"')
     p.expect(f'booted-revision: {qconf.expected_release}')

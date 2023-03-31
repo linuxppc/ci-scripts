@@ -51,6 +51,7 @@ Different toolchains
 
 There are images for various toolchains, they are encoded in the distro name/version.
 
+ - `korg@12.2.0`: kernel.org gcc 12.2.0, binutils 2.39
  - `korg@12.1.0`: kernel.org gcc 12.1.0, binutils 2.38
  - `korg@11.3.0`: kernel.org gcc 11.3.0, binutils 2.38
  - `korg@11.1.0`: kernel.org gcc 11.1.0, binutils 2.36.1
