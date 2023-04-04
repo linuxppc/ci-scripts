@@ -82,6 +82,18 @@ if [[ "$1" == "kernel" ]]; then
         (set -x; make $verbose $quiet "$cc" mod2yesconfig)
     fi
 
+    if [[ -n "$REPRODUCIBLE" ]]; then
+        # Check for options that defeat reproducible builds
+        grep \
+            -e CONFIG_IKCONFIG=y \
+            -e CONFIG_LOCALVERSION_AUTO=y \
+            -e CONFIG_IKHEADERS=y \
+            /output/.config
+        if [[ $? -eq 0 ]]; then
+            echo "!! Reproducible build specified, but the above options may prevent reproducibility."
+        fi
+    fi
+
     if [[ $rc -eq 0 ]]; then
         if [[ -n "$SPARSE" ]]; then
             rm -f /output/sparse.log

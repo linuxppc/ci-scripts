@@ -125,6 +125,14 @@ if [[ -n "$KBUILD_BUILD_TIMESTAMP" ]]; then
     cmd+="-e KBUILD_BUILD_TIMESTAMP=$KBUILD_BUILD_TIMESTAMP "
 fi
 
+if [[ -n "$REPRODUCIBLE" ]]; then
+    cmd+="-e KBUILD_BUILD_TIMESTAMP=1997-08-29T02:14-0400 "
+    cmd+="-e KBUILD_BUILD_USER=user "
+    cmd+="-e KBUILD_BUILD_HOST=host "
+    cmd+="-e KBUILD_BUILD_VERSION=1 "
+    cmd+="-e REPRODUCIBLE=1 "
+fi
+
 if [[ "$task" == "kernel" ]]; then
     if [[ -z "$DEFCONFIG" ]]; then
         DEFCONFIG="${subarch}_defconfig"
