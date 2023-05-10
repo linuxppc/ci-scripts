@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec "$(dirname "$0")"/qemu-ppc64e $@

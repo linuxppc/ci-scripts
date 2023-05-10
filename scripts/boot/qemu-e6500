@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export CPU=e6500
+export QEMU_INITRD=ppc64-rootfs.cpio.gz
+
+exec "$(dirname "$0")"/qemu-ppc64e $@

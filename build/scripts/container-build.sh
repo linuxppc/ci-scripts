@@ -153,6 +153,10 @@ elif [[ "$1" == "docs" ]]; then
 elif [[ "$1" == "perf" ]]; then
     cmd="make $quiet -C tools/perf O=/output"
 
+    if [[ $(uname -m) != "ppc64le" ]]; then
+        cmd+=" NO_LIBELF=1 NO_LIBTRACEEVENT=1"
+    fi
+
     if [[ -n "$PRE_CLEAN" ]]; then
         (set -x; $cmd clean)
     fi

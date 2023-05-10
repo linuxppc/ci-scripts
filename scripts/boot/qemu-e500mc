@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 #
 # Kernel needs:
+#   corenet32_smp_defconfig +
 #   CONFIG_PPC_QEMU_E500=y
 #   CONFIG_POWER_RESET_GPIO=y
 #
 # $ cd ~/src/linux
 # $ make
-# $ ~/src/ci-scripts/scripts/boot/qemu-ppc64e
+# $ ~/src/ci-scripts/scripts/boot/qemu-e500mc
 #
 # Or:
 #
@@ -14,15 +15,11 @@
 # export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
 #
 # Optional:
-# export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
+# export QEMU_SYSTEM_PPC=~/src/qemu/ppc-softmmu/qemu-system-ppc
 # export ROOT_DISK_PATH=~/some/directory
 #
-# Expects ROOT_DISK_PATH to contain either:
-#   ppc64-novsx-rootfs.cpio.gz
-# or
+# Expects ROOT_DISK_PATH to contain:
 #   ppc-rootfs.cpio.gz
-#
-# if COMPAT_USERSPACE is set.
 
 import logging
 import os, sys
@@ -36,13 +33,13 @@ def main():
     setup_logging()
 
     qconf = QemuConfig('ppce500')
-    qconf.cpu = 'e5500'
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
-    qconf.qemu_path = 'qemu-system-ppc64'
+    qconf.qemu_path = 'qemu-system-ppc'
     qconf.net_tests = False
-    qconf.mem = '4G'
+    qconf.mem = '2G'
     qconf.smp = 1
+    qconf.cpu = 'e500mc'
 
     qconf.apply_defaults()
 
