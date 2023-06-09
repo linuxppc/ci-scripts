@@ -17,7 +17,7 @@ UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@20.04 ubuntu@18.04 ubuntu@16.04
 KORG_DISTROS := korg@12.2.0 korg@12.1.0 korg@11.3.0 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 korg@8.1.0 korg@5.5.0
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@${UBUNTU_LATEST}
-X86_DISTRO := ubuntu@${UBUNTU_LATEST}
+X86_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu
 ALIAS_DISTROS := ubuntu ubuntu-allcross fedora
 ALLCROSS_DISTROS := ubuntu-allcross@${UBUNTU_LATEST} ubuntu-allcross
 ALL_ARCHES := alpha arm arm64 i686 m68k mips mips64 riscv s390 sh sparc x86_64
@@ -83,11 +83,15 @@ endef
 $(eval $(call MAIN_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 $(eval $(call DOCS_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 
-$(eval $(call MAIN_TEMPLATE,x86_64,${X86_DISTRO}))
-$(eval $(call KERNEL_TEMPLATE,x86_64,${X86_DISTRO}))
+$(foreach distro,${X86_DISTROS}, \
+	$(eval $(call MAIN_TEMPLATE,x86_64,${distro})) \
+	$(eval $(call KERNEL_TEMPLATE,x86_64,${distro})) \
+)
 
 ifeq ($(shell uname -m),x86_64)
-$(eval $(call SELFTESTS_TEMPLATE,x86_64,${X86_DISTRO}))
+$(foreach distro,${X86_DISTROS}, \
+	$(eval $(call SELFTESTS_TEMPLATE,x86_64,${distro})) \
+)
 endif
 
 $(foreach distro,${ALL_DISTROS}, \
