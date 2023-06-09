@@ -123,6 +123,8 @@ elif [[ "$distro" == "korg" ]]; then
     # Use an older distro for the 5.x toolchains.
     if [[ "$version" == 5.* ]]; then
 	from="docker.io/ubuntu:16.04"
+    elif [[ "$version" == 13.* ]]; then
+	from="docker.io/ubuntu:23.04"
     else
 	from="docker.io/ubuntu:20.04"
     fi
