@@ -128,6 +128,8 @@ if [[ "$1" == "kernel" ]]; then
 
     echo "## Kernel build completed rc = $rc"
 
+    /linux/scripts/clang-tools/gen_compile_commands.py -o /output/compile_commands.json /output > /dev/null 2>&1 || true
+
     if [[ -f /output/vmlinux ]]; then
         size /output/vmlinux
     fi
