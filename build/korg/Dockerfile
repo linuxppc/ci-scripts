@@ -27,6 +27,7 @@ RUN apt-get -q -y update && \
       libssl-dev \
       lzop \
       make \
+      python3 \
       openssl \
       u-boot-tools \
       rename \
