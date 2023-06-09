@@ -25,6 +25,7 @@ function get_output_dir()
     local defconfig="$6"
     local targets="$7"
     local clang="$8"
+    local symlink="$9"
     local d
 
     if [[ -z "$script_base" || -z "$subarch" || -z "$distro" ]]; then
@@ -41,6 +42,10 @@ function get_output_dir()
     case "$task" in
         kernel) ;&
         clean-kernel)
+	    if [[ -n "$symlink" ]]; then
+		echo "$d/latest-kernel"
+		return 0
+	    fi
             if [[ -n "$defconfig" ]]; then
                 defconfig="${defconfig//\//_}"
                 d="$d/$defconfig"
@@ -49,6 +54,10 @@ function get_output_dir()
         ppctests) ;&
         selftests) ;&
         clean-selftests)
+	    if [[ -n "$symlink" ]]; then
+		echo "$d/latest-selftests"
+		return 0
+	    fi
             if [[ -n "$targets" ]]; then
                 targets=${targets// /_}
                 targets=${targets//\//_}
@@ -59,6 +68,10 @@ function get_output_dir()
             ;;
         perf) ;&
         clean-perf)
+	    if [[ -n "$symlink" ]]; then
+		echo "$d/latest-perf"
+		return 0
+	    fi
             d="$d/perf"
             ;;
     esac
