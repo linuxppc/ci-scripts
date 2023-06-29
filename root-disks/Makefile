@@ -61,7 +61,7 @@ ubuntu21.10-cloudimg-ppc64el.qcow2:
 	sha256sum $@ > $@.sum
 
 define wget_fedora
-	$(call wget,$(1),"https://download.fedoraproject.org/pub/fedora-secondary/releases/$(2)/Cloud/ppc64le/images/$(3)")
+	$(call wget,$(1),"https://archives.fedoraproject.org/pub/archive/fedora-secondary/releases/$(2)/Cloud/ppc64le/images/$(3)")
 endef
 
 fedora34-cloudimg-ppc64le.qcow2:

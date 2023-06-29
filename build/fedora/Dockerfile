@@ -34,6 +34,7 @@ RUN dnf -y install --setopt=install_weak_deps=False \
         rsync \
         sparse \
         uboot-tools \
+        which \
         xz && \
     dnf clean all
 

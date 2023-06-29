@@ -164,7 +164,8 @@ if [[ -n $TARGETS ]]; then
     cmd+="-e TARGETS=$TARGETS "
 fi
 
-output_dir=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG")
+output_dir=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG" "")
+output_symlink=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG" "symlink")
 mkdir -p "$output_dir" || exit 1
 
 cmd+="-v $output_dir:/output:rw "
@@ -200,6 +201,14 @@ image="linuxppc/build:$distro-$version"
 cmd+="$image "
 cmd+="/bin/container-build.sh $task"
 
+echo "## output        = $output_dir"
+
 (set -x; $cmd)
 
-exit $?
+ret=$?
+if [[ $ret -eq 0  && -n "$output_symlink" ]]; then
+    rm -f $output_symlink
+    ln -s $output_dir $output_symlink
+fi
+
+exit $ret

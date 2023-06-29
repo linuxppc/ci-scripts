@@ -11,6 +11,6 @@ script_base="$(realpath "$dir")"
 
 IFS=@ read -r task subarch distro version <<< "$1"
 
-output_dir=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG")
+output_dir=$(get_output_dir "$script_base" "$subarch" "$distro" "$version" "$task" "$DEFCONFIG" "$TARGETS" "$CLANG" "")
 
 (set -x ; rm -rf "$output_dir")

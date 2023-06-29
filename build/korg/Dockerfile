@@ -27,6 +27,7 @@ RUN apt-get -q -y update && \
       libssl-dev \
       lzop \
       make \
+      python3 \
       openssl \
       u-boot-tools \
       rename \
@@ -53,6 +54,7 @@ RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
 ARG uid
 ARG gid
 
+RUN userdel -r ubuntu || true
 RUN groupadd --gid $gid linuxppc
 RUN useradd --uid $uid --gid $gid linuxppc
 USER linuxppc

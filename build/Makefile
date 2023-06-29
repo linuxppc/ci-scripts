@@ -1,23 +1,26 @@
 all: help
 
-export FEDORA_LATEST := 37
-export UBUNTU_LATEST := 22.04
+export FEDORA_LATEST := 38
 
-# If we're on ppc64le
-ifeq ($(shell uname -m),ppc64le)
-    # And we don't see ISA v3.0
-    ifeq ($(shell LD_SHOW_AUXV=1 /bin/true | grep "AT_HWCAP2:.*\barch_3_00\b"),)
-        # Then we can't use 22.04
-        UBUNTU_LATEST := 21.10
-    endif
+x86 = $(filter x86_64,$(shell uname -m))
+isa_3 = $(filter arch_3_00,$(shell LD_SHOW_AUXV=1 /bin/true))
+
+ifeq ($(or ${x86},${isa_3}),)
+# Can't use 22.04 or newer on P8
+export UBUNTU_LATEST := 21.10
+UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST}
+else
+export UBUNTU_LATEST := 22.10
+UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@22.04
 endif
 
-FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
-UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu
-KORG_DISTROS := korg@12.2.0 korg@12.1.0 korg@11.3.0 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 korg@8.1.0 korg@5.5.0
+UBUNTU_DISTROS += ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu
+
+FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@37 fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
+KORG_DISTROS := korg@13.1.0 korg@12.3.0 korg@12.2.0 korg@12.1.0 korg@11.3.0 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 korg@8.1.0 korg@5.5.0
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@${UBUNTU_LATEST}
-X86_DISTRO := ubuntu@${UBUNTU_LATEST}
+X86_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu
 ALIAS_DISTROS := ubuntu ubuntu-allcross fedora
 ALLCROSS_DISTROS := ubuntu-allcross@${UBUNTU_LATEST} ubuntu-allcross
 ALL_ARCHES := alpha arm arm64 i686 m68k mips mips64 riscv s390 sh sparc x86_64
@@ -83,11 +86,15 @@ endef
 $(eval $(call MAIN_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 $(eval $(call DOCS_TEMPLATE,ppc64le,${DOCS_DISTRO}))
 
-$(eval $(call MAIN_TEMPLATE,x86_64,${X86_DISTRO}))
-$(eval $(call KERNEL_TEMPLATE,x86_64,${X86_DISTRO}))
+$(foreach distro,${X86_DISTROS}, \
+	$(eval $(call MAIN_TEMPLATE,x86_64,${distro})) \
+	$(eval $(call KERNEL_TEMPLATE,x86_64,${distro})) \
+)
 
 ifeq ($(shell uname -m),x86_64)
-$(eval $(call SELFTESTS_TEMPLATE,x86_64,${X86_DISTRO}))
+$(foreach distro,${X86_DISTROS}, \
+	$(eval $(call SELFTESTS_TEMPLATE,x86_64,${distro})) \
+)
 endif
 
 $(foreach distro,${ALL_DISTROS}, \
