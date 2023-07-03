@@ -10,8 +10,8 @@ ifeq ($(or ${x86},${isa_3}),)
 export UBUNTU_LATEST := 21.10
 UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST}
 else
-export UBUNTU_LATEST := 22.10
-UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@22.04
+export UBUNTU_LATEST := 23.04
+UBUNTU_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu@22.10 ubuntu@22.04
 endif
 
 UBUNTU_DISTROS += ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu

@@ -113,16 +113,20 @@ if [[ "$1" == "kernel" ]]; then
     fi
 
     if [[ $rc -eq 0 && -n "$MODULES" ]]; then
-        echo "## Installing modules"
+        if grep CONFIG_MODULES=y /output/.config > /dev/null; then
+            echo "## Installing modules"
 
-        mod_path=/output/modules
-        # Clean out any old modules
-        rm -rf $mod_path
+            mod_path=/output/modules
+            # Clean out any old modules
+            rm -rf $mod_path
 
-        (set -x; make $verbose $quiet -j $JFACTOR "$cc" INSTALL_MOD_PATH=$mod_path modules_install)
-        rc=$?
-        if [[ $rc -eq 0 ]]; then
-            tar -cjf /output/modules.tar.bz2 -C $mod_path lib
+            (set -x; make $verbose $quiet -j $JFACTOR "$cc" INSTALL_MOD_PATH=$mod_path modules_install)
+            rc=$?
+            if [[ $rc -eq 0 ]]; then
+                tar -cjf /output/modules.tar.bz2 -C $mod_path lib
+            fi
+        else
+            echo "## Modules not configured"
         fi
     fi
 
