@@ -93,19 +93,19 @@ class QemuConfig:
 
         if self.cpuinfo is None:
             if self.machine_is('pseries'):
-                self.cpuinfo = ['IBM pSeries \(emulated by qemu\)']
+                self.cpuinfo = [r'IBM pSeries \(emulated by qemu\)']
             elif self.machine_is('powernv'):
-                self.cpuinfo = ['IBM PowerNV \(emulated by qemu\)']
+                self.cpuinfo = [r'IBM PowerNV \(emulated by qemu\)']
             elif self.machine == 'mac99':
-                self.cpuinfo = ['PowerMac3,1 MacRISC MacRISC2 Power Macintosh']
+                self.cpuinfo = [r'PowerMac3,1 MacRISC MacRISC2 Power Macintosh']
             elif self.machine == 'g3beige':
-                self.cpuinfo = ['AAPL,PowerMac G3 MacRISC']
+                self.cpuinfo = [r'AAPL,PowerMac G3 MacRISC']
             elif self.machine == 'bamboo':
-                self.cpuinfo = ['PowerPC 44x Platform']
+                self.cpuinfo = [r'PowerPC 44x Platform']
             elif self.machine == 'ppce500':
-                self.cpuinfo = ['QEMU ppce500']
+                self.cpuinfo = [r'QEMU ppce500']
                 if self.cpu:
-                    self.cpuinfo.insert(0, f'cpu\s+: {self.cpu}')
+                    self.cpuinfo.insert(0, f'cpu\\s+: {self.cpu}')
 
         if self.qemu_path is None:
             if self.machine_is('pseries') or self.machine_is('powernv'):
@@ -153,7 +153,7 @@ class QemuConfig:
             if 'ubuntu' in self.cloud_image:
                 self.prompt = 'root@ubuntu:~#'
             elif 'fedora' in self.cloud_image:
-                self.prompt = '\[root@fedora ~\]#'
+                self.prompt = r'\[root@fedora ~\]#'
             elif 'debian' in self.cloud_image:
                 self.prompt = 'root@debian:~#'
 
@@ -289,7 +289,7 @@ class QemuConfig:
 
 def qemu_monitor_shutdown(p):
     p.send('\x01c') # invoke qemu monitor
-    p.expect('\(qemu\)')
+    p.expect(r'\(qemu\)')
     p.send('quit')
 
 
@@ -327,7 +327,7 @@ def get_root_disk(fname):
 def get_qemu_version(emulator):
     p = PexpectHelper()
     p.spawn('%s --version' % emulator, quiet=True)
-    p.expect('QEMU emulator version (([0-9]+)\.([0-9]+)[^\n]*)')
+    p.expect(r'QEMU emulator version (([0-9]+)\.([0-9]+)[^\n]*)')
     full, major, minor = p.matches()
     return (int(major), int(minor), full.strip())
 
