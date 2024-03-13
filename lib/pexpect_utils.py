@@ -7,11 +7,11 @@ from utils import debug_level
 
 class PexpectHelper:
     default_bug_patterns = [
-        'Unable to handle kernel paging request',
-        'Oops: Kernel access of bad area',
-        'Kernel panic - not syncing:',
-        '------------\[ cut here \]------------',
-        '\( 700 \) Program Exception',
+        r'Unable to handle kernel paging request',
+        r'Oops: Kernel access of bad area',
+        r'Kernel panic - not syncing:',
+        r'------------\[ cut here \]------------',
+        r'\( 700 \) Program Exception',
     ]
 
     def __init__(self):
@@ -185,7 +185,7 @@ def xmon_di(p, addr):
     xmon_enter(p)
 
     p.send("di %x 1" % addr)
-    p.expect("di %x 1\s+%x\s+([a-f0-9]+)\s+([\.a-z].*)\r" % (addr, addr))
+    p.expect("di %x 1\\s+%x\\s+([a-f0-9]+)\\s+([\\.a-z].*)\r" % (addr, addr))
     result = [s.strip() for s in p.matches()]
     p.expect_prompt()
 
