@@ -78,16 +78,12 @@ def get_vmlinux():
 
 
 def get_expected_release():
-    path = os.environ.get('KERNEL_RELEASE_PATH', None)
-    if path is None:
-        # Assume we're running in the kernel build directory
-        path = 'include/config/kernel.release'
-        msg = f"Couldn't read {path}, export KERNEL_RELEASE_PATH"
+    env = os.environ.get('KERNEL_RELEASE_PATH', None)
+    for path in [env, 'include/config/kernel.release', 'kernel.release']:
+        if path and os.path.isfile(path):
+            break
     else:
-        msg = f"Couldn't read KERNEL_RELEASE_PATH {path}"
-
-    if not os.path.isfile(path):
-        logging.error(msg)
+        logging.error(f"Couldn't find kernel.release, export KERNEL_RELEASE_PATH")
         return None
 
     expected_release = open(path).read().strip()
@@ -141,9 +137,22 @@ def filter_log_warnings(infile, outfile):
     parser = ConfigParser()
     parser.read_file(open(path))
     suppressions = [t[1] for t in parser.items('suppressions', [])]
+    suppression_patterns = [t[1] for t in parser.items('suppression_patterns', [])]
+    suppression_patterns = [re.compile(p) for p in suppression_patterns]
     strings  = [t[1] for t in parser.items('strings', [])]
     patterns = [t[1] for t in parser.items('patterns', [])]
     patterns = [re.compile(p) for p in patterns]
+
+    def suppress(line):
+        for suppression in suppressions:
+            if suppression in line:
+                return True
+
+        for pattern in suppression_patterns:
+            if pattern.search(line):
+                return True
+
+        return False
 
     found = False
     while True:
@@ -151,9 +160,8 @@ def filter_log_warnings(infile, outfile):
         if len(line) == 0:
             break
 
-        for suppression in suppressions:
-            if suppression in line:
-                continue
+        if suppress(line):
+            continue
 
         for string in strings:
             if string in line:

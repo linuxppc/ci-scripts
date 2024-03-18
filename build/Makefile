@@ -1,6 +1,6 @@
 all: help
 
-export FEDORA_LATEST := 38
+export FEDORA_LATEST := 39
 
 x86 = $(filter x86_64,$(shell uname -m))
 isa_3 = $(filter arch_3_00,$(shell LD_SHOW_AUXV=1 /bin/true))
@@ -16,14 +16,14 @@ endif
 
 UBUNTU_DISTROS += ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu
 
-FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@37 fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
+FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@38 fedora@37 fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
 KORG_DISTROS := korg@13.1.0 korg@12.3.0 korg@12.2.0 korg@12.1.0 korg@11.3.0 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 korg@8.1.0 korg@5.5.0
 ALL_DISTROS := ${UBUNTU_DISTROS} ${KORG_DISTROS} ${FEDORA_DISTROS}
 DOCS_DISTRO := docs@${UBUNTU_LATEST}
 X86_DISTROS := ubuntu@${UBUNTU_LATEST} ubuntu
-ALIAS_DISTROS := ubuntu ubuntu-allcross fedora
-ALLCROSS_DISTROS := ubuntu-allcross@${UBUNTU_LATEST} ubuntu-allcross
-ALL_ARCHES := alpha arm arm64 i686 m68k mips mips64 riscv s390 sh sparc x86_64
+ALIAS_DISTROS := ubuntu allcross fedora
+ALLCROSS_DISTROS := allcross@sid allcross
+ALL_ARCHES := alpha arc arm arm64 i686 m68k mips mips64 parisc riscv s390 sh sparc x86_64
 SUBARCHES := ppc64le ppc64 ppc
 
 VERSION:
@@ -32,7 +32,7 @@ VERSION:
 define MAIN_TEMPLATE =
 image@${1}@${2} rebuild-image@${1}@${2}: VERSION
 
-image@${1}@${2} rebuild-image@${1}@${2} pull-image@${1}@${2} push-image@${1}@${2}:
+image@${1}@${2} rebuild-image@${1}@${2} pull-image@${1}@${2} push-image@${1}@${2} pull-base-image@${1}@${2}:
 	@./scripts/image.sh $$@
 
 clean@${1}@${2}:
@@ -43,6 +43,7 @@ IMAGES += image@${1}@${2}
 PULL_IMAGES += pull-image@${1}@${2}
 REBUILD_IMAGES += rebuild-image@${1}@${2}
 PUSH_IMAGES += push-image@${1}@${2}
+PULL_BASE_IMAGES += pull-base-image@${1}@${2}
 endef
 
 define KERNEL_TEMPLATE =
@@ -51,6 +52,9 @@ kernel@${1}@${2}: image@${1}@${2}
 
 clean-kernel@${1}@${2}:
 	@./scripts/clean.sh $$@
+
+prune-kernel@${1}@${2}:
+	@./scripts/prune.sh $$@
 
 KERNEL += $(if $(filter-out ${ALIAS_DISTROS},${2}), kernel@${1}@${2})
 endef
@@ -61,6 +65,9 @@ ppctests@${1}@${2} selftests@${1}@${2}: image@${1}@${2}
 
 clean-selftests@${1}@${2}:
 	@./scripts/clean.sh $$@
+
+prune-selftests@${1}@${2}:
+	@./scripts/prune.sh $$@
 
 PPCTESTS += $(if $(filter-out ${ALIAS_DISTROS},${2}), ppctests@${1}@${2})
 SELFTESTS += $(if $(filter-out ${ALIAS_DISTROS},${2}), selftests@${1}@${2})
@@ -141,9 +148,10 @@ images: ${IMAGES}
 pull-images: ${PULL_IMAGES}
 rebuild-images: ${REBUILD_IMAGES}
 push-images: ${PUSH_IMAGES}
+pull-base-images: ${PULL_BASE_IMAGES}
 docs: ${DOCS}
 
-ALL_TARGETS = ${KERNEL} ${PPCTESTS} ${SELFTESTS} ${IMAGES} ${PULL_IMAGES} ${DOCS} ${CLEAN}
+ALL_TARGETS = ${KERNEL} ${PPCTESTS} ${SELFTESTS} ${PERF} ${IMAGES} ${PULL_IMAGES} ${REBUILD_IMAGES} ${PUSH_IMAGES} ${PULL_BASE_IMAGES} ${DOCS} ${CLEAN}
 .PHONY: ${ALL_TARGETS} VERSION
 
 empty:=

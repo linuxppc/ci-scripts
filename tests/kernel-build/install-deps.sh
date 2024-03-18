@@ -22,7 +22,7 @@ if [[ "$ID" == "fedora" ]]; then
         openssl-devel \
         ;
     )
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     (set -x; $sudo apt-get -y install gcc binutils bc flex bison)
 else

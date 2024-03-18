@@ -11,7 +11,7 @@ fi
 
 if [[ "$ID" == "fedora" ]]; then
    package_manager="dnf"
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
    package_manager="apt-get"
 else
     echo "Unsupported distro!" >&2

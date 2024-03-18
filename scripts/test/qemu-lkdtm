@@ -34,7 +34,6 @@ triggers = ['BUG', 'WARNING', 'WARNING_MESSAGE', 'EXCEPTION', 'ARRAY_BOUNDS',
 def test(name, cpu, machine):
     qconf = QemuConfig(machine)
     qconf.configure_from_env()
-    qconf.net_tests = False
     qconf.mem = '2G'
     qconf.cpu = cpu
     qconf.accel = kvm_or_tcg(machine, cpu)

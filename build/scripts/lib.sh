@@ -41,6 +41,7 @@ function get_output_dir()
 
     case "$task" in
         kernel) ;&
+        prune-kernel) ;&
         clean-kernel)
 	    if [[ -n "$symlink" ]]; then
 		echo "$d/latest-kernel"
@@ -53,6 +54,7 @@ function get_output_dir()
             ;;
         ppctests) ;&
         selftests) ;&
+        prune-selftests) ;&
         clean-selftests)
 	    if [[ -n "$symlink" ]]; then
 		echo "$d/latest-selftests"
@@ -89,7 +91,7 @@ function get_output_dir()
         d="$d@$version"
     fi
 
-    d=$(realpath $d)
+    d=$(realpath -q $d)
     echo "$d"
 
     return 0
@@ -102,7 +104,7 @@ function get_default_version()
 
     case "$distro" in
         ubuntu) latest="$UBUNTU_LATEST" ;;
-        ubuntu-allcross) latest="$UBUNTU_LATEST" ;;
+        allcross) latest="sid" ;;
         fedora) latest="$FEDORA_LATEST" ;;
     esac
 

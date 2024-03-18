@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# $ make pmac32_defconfig
+# $ make guest.config
+# $ echo CONFIG_CGROUPS=y >> .config
+# $ echo CONFIG_DEVTMPFS=y >> .config
+# $ make olddefconfig
+
+export CLOUD_IMAGE=debian-sid-powerpc.qcow2
+
+exec "$(dirname "$0")"/qemu-mac99 $@

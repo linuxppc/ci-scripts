@@ -11,7 +11,7 @@ fi
 
 if [[ "$ID" == "fedora" ]]; then
     (set -x; $sudo dnf -y install gcc)
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     (set -x; $sudo apt-get -y install gcc)
 else
     echo "Unsupported distro!" >&2

@@ -36,7 +36,6 @@ def main():
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
     qconf.qemu_path = 'qemu-system-ppc'
-    qconf.net_tests = False
     qconf.mem = '2G'
     qconf.smp = 1
     qconf.cpu = 'e500mc'

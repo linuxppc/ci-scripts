@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# $ make corenet64_smp_defconfig
+# $ make guest.config
+# $ echo CONFIG_E6500_CPU=y >> .config
+# $ make olddefconfig
+
+export CPU=e6500
+export CLOUD_IMAGE=debian-sid-powerpc.qcow2
+
+exec "$(dirname "$0")"/qemu-ppc64e $@

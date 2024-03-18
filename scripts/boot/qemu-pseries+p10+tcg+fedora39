@@ -1,0 +1,7 @@
+#!/bin/bash
+
+export CPU=POWER10
+export ACCEL=tcg
+export CLOUD_IMAGE=fedora39-cloudimg-ppc64le.qcow2
+
+exec "$(dirname "$0")"/qemu-pseries $@

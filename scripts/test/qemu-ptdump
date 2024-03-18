@@ -15,7 +15,6 @@ from dump import read_symbols, find_symbol
 def test(name, cpu, machine):
     qconf = QemuConfig(machine)
     qconf.configure_from_env()
-    qconf.net_tests = False
     qconf.mem = '2G'
     qconf.smp = 1
     qconf.cpu = cpu

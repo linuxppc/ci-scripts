@@ -14,7 +14,6 @@ from pexpect_utils import xmon_enter, xmon_exit
 def test(name, cpu, machine):
     qconf = QemuConfig(machine)
     qconf.configure_from_env()
-    qconf.net_tests = False
     qconf.smp = 2
     qconf.cpu = cpu
     qconf.host_mounts = []

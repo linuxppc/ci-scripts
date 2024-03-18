@@ -3,8 +3,9 @@
 cloud-init-user-data.img
 ubuntu16.04-cloudimg-powerpc.qcow2
 ubuntu16.04-cloudimg-ppc64el.qcow2
+ubuntu18.04-cloudimg-ppc64el.qcow2
 ubuntu21.04-cloudimg-ppc64el.qcow2
 ubuntu21.10-cloudimg-ppc64el.qcow2
-fedora34-cloudimg-ppc64le.qcow2
-fedora36-cloudimg-ppc64le.qcow2
+ubuntu22.04-cloudimg-ppc64el.qcow2
+fedora*-cloudimg-ppc64le.qcow2
 debian-sid-powerpc.qcow2

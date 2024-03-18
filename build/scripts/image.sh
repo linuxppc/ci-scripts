@@ -17,6 +17,23 @@ fi
 
 image="linuxppc/build:$distro-$version"
 
+from="docker.io/$distro:$version"
+
+if [[ "$distro" == "docs" ]]; then
+    from="docker.io/ubuntu:$version"
+elif [[ "$distro" == "allcross" ]]; then
+    from="docker.io/debian:$version"
+elif [[ "$distro" == "korg" ]]; then
+    # Use an older distro for the 5.x toolchains.
+    if [[ "$version" == 5.* ]]; then
+        from="docker.io/ubuntu:16.04"
+    elif [[ "$version" == 13.* ]]; then
+        from="docker.io/ubuntu:23.04"
+    else
+        from="docker.io/ubuntu:20.04"
+    fi
+fi
+
 if [[ "$task" == "image" ]]; then
     cmd="$DOCKER images -q --filter=reference=$image"
     echo "+ $cmd" # fake set -x display
@@ -82,13 +99,13 @@ elif [[ "$task" == "push-image" ]]; then
     fi
 
     exit 0
+elif [[ "$task" == "pull-base-image" ]]; then
+    cmd="$DOCKER pull $from"
+    (set -x; $cmd)
+    exit $?
 fi
 
 cmd="$DOCKER build -f $distro/Dockerfile "
-
-if [[ "$distro" != "ubuntu-allcross" ]]; then
-    cmd+="--pull "
-fi
 
 if [[ -n "$http_proxy" ]]; then
     cmd+="--build-arg http_proxy=$http_proxy "
@@ -106,28 +123,11 @@ if [[ -z "$GID" ]]; then
     GID=$(id -g)
 fi
 
-from="docker.io/$distro:$version"
-
-if [[ "$distro" == "docs" ]]; then
-    from="docker.io/ubuntu:$version"
-elif [[ "$distro" == "ubuntu-allcross" ]]; then
-	from="linuxppc/build:ubuntu-$version"
-elif [[ "$distro" == "korg" ]]; then
+if [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
-
     arch=$(uname -m)
-
     cmd+="--build-arg base_url=https://mirrors.edge.kernel.org/pub/tools/crosstool/files/bin/${arch}/${version}/ "
     cmd+="--build-arg tar_file=${arch}-gcc-${version}-nolibc-powerpc64-linux.tar.xz "
-
-    # Use an older distro for the 5.x toolchains.
-    if [[ "$version" == 5.* ]]; then
-	from="docker.io/ubuntu:16.04"
-    elif [[ "$version" == 13.* ]]; then
-	from="docker.io/ubuntu:23.04"
-    else
-	from="docker.io/ubuntu:20.04"
-    fi
 fi
 
 cmd+="--build-arg uid=$UID "

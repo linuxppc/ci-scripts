@@ -30,6 +30,7 @@ def main():
     setup_logging()
 
     qconf = QemuConfig('powernv')
+    qconf.net_tests = True
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
     qconf.apply_defaults()

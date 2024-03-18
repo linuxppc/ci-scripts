@@ -23,7 +23,7 @@ if [[ "$ID" == "fedora" ]]; then
         tar \
         xz
     )
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     (set -x;
      $sudo apt-get -y install \

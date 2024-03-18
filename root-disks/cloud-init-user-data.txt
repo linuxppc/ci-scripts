@@ -9,3 +9,4 @@ users:
 
 # don't regenerate ssh keys, it takes time for no benefit
 ssh_deletekeys: false
+ssh_genkeytypes: [dsa]

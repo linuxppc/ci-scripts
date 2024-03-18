@@ -21,7 +21,7 @@ if [[ "$ID" == "fedora" ]]; then
         pkgconf-pkg-config \
         util-linux
     )
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     (set -x; $sudo apt-get -y install autoconf \
         automake \

@@ -31,6 +31,7 @@ def main():
     setup_logging()
 
     qconf = QemuConfig('mac99')
+    qconf.net_tests = True
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
     qconf.machine_caps += ['via=pmu']

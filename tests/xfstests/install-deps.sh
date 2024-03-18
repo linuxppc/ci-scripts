@@ -40,7 +40,7 @@ if [[ "$ID" == "fedora" ]]; then
         xfsprogs \
         xfsprogs-devel
     )
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     (set -x; $sudo apt-get -y install \
         attr \

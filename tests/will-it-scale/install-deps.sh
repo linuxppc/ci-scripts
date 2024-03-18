@@ -11,7 +11,7 @@ fi
 
 if [[ "$ID" == "fedora" ]]; then
     (set -x; $sudo dnf -y install gcc hwloc-devel make)
-elif [[ "$ID_LIKE" == "debian" ]]; then
+elif [[ "${ID_LIKE:-$ID}" == "debian" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     (set -x; $sudo apt-get -y install build-essential libhwloc-dev)
 else

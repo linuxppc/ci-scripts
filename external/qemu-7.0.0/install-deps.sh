@@ -1,1 +1,0 @@
-../qemu-4.2.1/install-deps.sh
