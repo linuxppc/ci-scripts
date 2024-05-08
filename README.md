@@ -69,6 +69,7 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - `ubuntu@20.04`: Ubuntu 20.04, gcc 9.4.0, binutils 2.34
  - `ubuntu@18.04`: Ubuntu 18.04, gcc 7.5.0, binutils 2.30
  - `ubuntu@16.04`: Ubuntu 16.04, gcc 5.4.0, binutils 2.26.1
+ - `fedora@40`: Fedora 40, gcc 14.0.1, binutils 2.41-34, clang 18.1.1
  - `fedora@39`: Fedora 39, gcc 13.2.1, binutils 2.40-14, clang 17.0.6
  - `fedora@38`: Fedora 38, gcc 12.2.1, binutils 2.39-3, clang 16.0.2
  - `fedora@37`: Fedora 37, gcc 12.2.1, binutils 2.38-5, clang 15.0.7

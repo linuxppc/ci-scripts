@@ -82,6 +82,8 @@ class QemuConfig:
         if self.machine_is('pseries'):
             if self.accel == 'tcg':
                 self.machine_caps += ['cap-htm=off']
+            else:
+                self.__set_spectre_v2_caps()
 
             if self.cpu and self.accel == 'kvm':
                 if self.cpu != 'host':
@@ -242,6 +244,19 @@ class QemuConfig:
         elif 'fedora' in self.cloud_image:
             self.cmdline.insert(0, 'systemd.mask=hcn-init.service systemd.hostname=fedora')
             self.cmdline.insert(0, f'root=/dev/vd{cloud_drive}5 rootfstype=btrfs rootflags=subvol=root')
+
+    def __set_spectre_v2_caps(self):
+        try:
+            body = open('/sys/devices/system/cpu/vulnerabilities/spectre_v2', 'r').read()
+        except (FileNotFoundError, PermissionError):
+            # Should be readable, but continue anyway and cross fingers
+            return
+
+        for s in ['Indirect branch cache disabled', 'Software count cache flush']:
+            if s in body:
+                return
+
+        self.machine_caps += ['cap-ccf-assist=off']
 
     def cmd(self):
         logging.info('Using qemu version %s.%s "%s"' % get_qemu_version(self.qemu_path))

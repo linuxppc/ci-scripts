@@ -17,9 +17,9 @@ fi
 
 image="linuxppc/build:$distro-$version"
 
-from="docker.io/$distro:$version"
-
-if [[ "$distro" == "docs" ]]; then
+if [[ "$distro" == "fedora" ]]; then
+    from="registry.fedoraproject.org/$distro:$version"
+elif [[ "$distro" == "docs" ]]; then
     from="docker.io/ubuntu:$version"
 elif [[ "$distro" == "allcross" ]]; then
     from="docker.io/debian:$version"
@@ -32,6 +32,8 @@ elif [[ "$distro" == "korg" ]]; then
     else
         from="docker.io/ubuntu:20.04"
     fi
+else
+    from="docker.io/$distro:$version"
 fi
 
 if [[ "$task" == "image" ]]; then

@@ -21,7 +21,7 @@ ARCHES := powerpc-440fp \
 	powerpc64-e5500 \
 	powerpc64-e6500 \
 	powerpc64-power8 \
-	powerpc64le-power8 
+	powerpc64le-power8
 
 VERSIONS := glibc--stable-2024.02-1
 
@@ -66,9 +66,9 @@ prepare: download
 build:
 
 clean:
-	@:
+	rm -f *.tar.bz2
 
 distclean: clean
-	rm -rf $(CLEAN_DIRS) *.tar.xz
+	rm -rf $(CLEAN_DIRS)
 
 .PHONY: download prepare build clean distclean help
