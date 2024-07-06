@@ -178,7 +178,7 @@ else
     # Workaround 303e6218ecec ("selftests: Fix O= and KBUILD_OUTPUT handling for relative paths")
     export abs_objtree=$KBUILD_OUTPUT
 
-    cmd="make $quiet -j $JFACTOR -C tools/testing/selftests"
+    cmd="make -k $quiet -j $JFACTOR -C tools/testing/selftests"
 
     if [[ "$1" == "ppctests" ]]; then
         TARGETS="powerpc"

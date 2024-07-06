@@ -63,6 +63,7 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - `korg@8.5.0`: kernel.org gcc 8.5.0, binutils 2.36.1
  - `korg@8.1.0`: kernel.org gcc 8.1.0, binutils 2.30
  - `korg@5.5.0`: kernel.org gcc 5.5.0, binutils 2.29.1
+ - `ubuntu@24.04`: Ubuntu 24.04, gcc 13.2.0, binutils 2.42
  - `ubuntu@22.04`: Ubuntu 22.04, gcc 11.2.0, binutils 2.38
  - `ubuntu@21.10`: Ubuntu 21.10, gcc 11.2.0, binutils 2.37
  - `ubuntu@21.04`: Ubuntu 21.04, gcc 10.3.0, binutils 2.36.1
