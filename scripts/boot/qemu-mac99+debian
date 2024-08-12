@@ -6,6 +6,4 @@
 # $ echo CONFIG_DEVTMPFS=y >> .config
 # $ make olddefconfig
 
-export CLOUD_IMAGE=debian-sid-powerpc.qcow2
-
-exec "$(dirname "$0")"/qemu-mac99 $@
+exec "$(dirname "$0")"/qemu-mac99 --cloud-image debian-sid-powerpc.qcow2 "$@"

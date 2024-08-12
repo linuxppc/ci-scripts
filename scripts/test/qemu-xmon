@@ -22,7 +22,7 @@ def test(name, cpu, machine):
     if os.environ.get('QEMU_QUIET', None) is None:
         qconf.quiet = True
 
-    def test_xmon(p):
+    def test_xmon(qconf, p):
         xmon_enter(p)
 
         p.send('e')
@@ -55,10 +55,10 @@ def test(name, cpu, machine):
 
         xmon_exit(p)
 
-    qconf.callback = test_xmon
+    qconf.callbacks.append(test_xmon)
     qconf.apply_defaults()
 
-    if cpu == 'POWER10' and not qemu_supports_p10(qconf.qemu_path):
+    if cpu == 'POWER10' and not qemu_supports_p10(qconf.qemu_cmd):
         return None
 
     return qemu_main(qconf)

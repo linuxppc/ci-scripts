@@ -1,5 +1,3 @@
 #!/bin/bash
 
-export COMPAT_USERSPACE=1
-
-exec "$(dirname "$0")"/qemu-pseries+p8+tcg $@
+exec "$(dirname "$0")"/qemu-pseries+p8+tcg --compat-rootfs "$@"

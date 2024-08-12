@@ -51,12 +51,7 @@ RUN curl -sSL $base_url/$tar_file > $tar_file && \
 COPY korg/make-links.sh /tmp/make-links.sh
 RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
 
-ARG uid
-ARG gid
-
-RUN userdel -r ubuntu || true
-RUN groupadd --gid $gid linuxppc
-RUN useradd --uid $uid --gid $gid linuxppc
+RUN useradd linuxppc
 USER linuxppc
 
 COPY scripts/container-build.sh /bin/container-build.sh

@@ -149,3 +149,72 @@ $ make rebuild-image@ppc64le@ubuntu
 
 Note that the build mounts the source tree read-only, so nothing it does can
 affect your source tree.
+
+Bisecting the kernel vs a selftest
+----------------------------------
+
+Build the selftests using a version of the test that's known good. Usually
+there's no reason to rebuild the tests on every kernel revision.
+
+These examples are run from the kernel directory, not the ci-scripts directory.
+It can be done either way, but it's more natural to run from the kernel
+directory when bisectting the kernel. This assumes Linux is in `~/linux` and
+these scripts are in `~/ci-scripts`, adapt as appropriate.
+
+```
+$ cd ~/linux
+```
+
+```
+$ make SRC=$PWD -C ~/ci-scripts/build QUIET=1 JFACTOR=$(nproc) ppctests@ppc64le@ubuntu@16.04 INSTALL=1
+```
+
+:rotating_light: Using an old Ubuntu image uses an older libc, which is more
+likely to be present on the guest root filesystem. Another option is to build
+the selftests statically.
+
+Tar up the selftests into the current directory, the qemu scripts will detect them:
+
+```
+$ tar -czf selftests.tar.gz -C $HOME/ci-scripts/build/output/selftests_powerpc@ppc64le@ubuntu@16.04/ install
+```
+
+```
+$ ~/ci-scripts/scripts/boot/qemu-pseries+kvm --callback "run_selftests(powerpc/mm:wild_bctr)"
+...
+INFO: Running 'qemu-system-ppc64 -nographic -vga none -M pseries -smp 8 -m 4G -accel kvm ...
+...
+/ # INFO: Running individual selftests powerpc/mm:wild_bctr
+/var/tmp/selftests/run_kselftest.sh -t powerpc/mm:wild_bctr
+[    2.783761][  T201] kselftest: Running tests in powerpc
+TAP version 13
+1..1
+# timeout set to 300
+# selftests: powerpc/mm: wild_bctr
+# test: wild_bctr
+# tags: git_version:v6.8-rc6-2555-gfe559db
+# Everything is OK in here.
+...
+# success: wild_bctr
+ok 1 selftests: powerpc/mm: wild_bctr
+/ # poweroff
+/ # Stopping network: [    3.104385][  T274] ip (274) used greatest stack depth: 10912 bytes left
+OK
+Saving random seed: OK
+Stopping klogd: OK
+Stopping syslogd: OK
+umount: devtmpfs busy - remounted read-only
+umount: can't unmount /: Invalid argument
+The system is going down NOW!
+Sent SIGTERM to all processes
+Sent SIGKILL to all processes
+Requesting system poweroff
+[    5.152672][  T293] reboot: Power down
+INFO: Test completed OK
+```
+
+More than one selftest can be run by passing multiple arguments to
+`run_selftests` or by passing multiple `--callback` options.
+
+From there the bisection can either be run by hand, or fully automated by
+creating a script to build the kernel and run the qemu test.

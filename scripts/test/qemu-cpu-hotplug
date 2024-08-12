@@ -22,16 +22,16 @@ def test(name, cpu, machine):
     if os.environ.get('QEMU_QUIET', None) is None:
         qconf.quiet = True
 
-    qconf.callback = test_cpuhotplug
+    qconf.callbacks.append(test_cpuhotplug)
     qconf.apply_defaults()
 
-    if cpu == 'POWER10' and not qemu_supports_p10(qconf.qemu_path):
+    if cpu == 'POWER10' and not qemu_supports_p10(qconf.qemu_cmd):
         return None
 
     return qemu_main(qconf)
 
 
-def test_cpuhotplug(p):
+def test_cpuhotplug(qconf, p):
     # Check we have 2 CPUs online
     p.send('grep -H . /sys/devices/system/cpu/cpu*/online')
     p.expect('/sys/devices/system/cpu/cpu0/online:1')

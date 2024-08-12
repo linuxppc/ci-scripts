@@ -124,6 +124,7 @@ if [[ "$1" == "kernel" ]]; then
             rc=$?
             if [[ $rc -eq 0 ]]; then
                 tar -cjf /output/modules.tar.bz2 -C $mod_path lib
+                tar -czf /output/modules.tar.gz -C $mod_path lib
             fi
         else
             echo "## Modules not configured"

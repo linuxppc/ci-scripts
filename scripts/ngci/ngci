@@ -1,0 +1,8 @@
+#!/usr/bin/python3
+
+import os, sys
+arg0_dir = os.path.dirname(os.path.realpath(sys.argv[0]))
+sys.path.append(f'{arg0_dir}/../../lib')
+from ngci import ngci_main
+
+sys.exit(ngci_main(sys.argv))

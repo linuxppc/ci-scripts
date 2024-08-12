@@ -9,16 +9,6 @@
 # $ cd ~/src/linux
 # $ make
 # $ ~/src/ci-scripts/scripts/boot/qemu-g5
-#
-# Or:
-#
-# export VMLINUX_PATH=~/src/linux/vmlinux
-# export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
-#
-# Optional:
-# export QEMU_SYSTEM_PPC64=~/src/qemu/ppc64-softmmu/qemu-system-ppc64
-# export ROOT_DISK_PATH=~/some/directory
-# Expects ppc64-rootfs.cpio.gz in ROOT_DISK_PATH
 
 import os, sys
 sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
@@ -35,7 +25,7 @@ def main():
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
     qconf.machine_caps += ['via=pmu']
-    qconf.qemu_path = 'qemu-system-ppc64'
+    qconf.qemu_cmd = 'qemu-system-ppc64'
 
     qconf.apply_defaults()
 

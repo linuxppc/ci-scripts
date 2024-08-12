@@ -10,16 +10,6 @@
 # $ cd ~/src/linux
 # $ make
 # $ ~/src/ci-scripts/scripts/boot/qemu-mac99
-#
-# Or:
-#
-# export VMLINUX_PATH=~/src/linux/vmlinux
-# export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
-#
-# Optional:
-# export QEMU_SYSTEM_PPC=~/src/qemu/ppc-softmmu/qemu-system-ppc
-# export ROOT_DISK_PATH=~/some/directory
-# Expects ppc-rootfs.cpio.gz in ROOT_DISK_PATH
 
 import logging
 import os, sys

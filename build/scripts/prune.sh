@@ -27,7 +27,7 @@ case "$task" in
         mkdir -p "artifacts"
         for path in .config vmlinux System.map arch/powerpc/boot/zImage include/config/kernel.release \
                     arch/powerpc/kernel/asm-offsets.s arch/powerpc/boot/uImage modules.tar.bz2 \
-                    sparse.log log.txt
+                    modules.tar.gz sparse.log log.txt
         do
             if [[ -e "$path" ]]; then
                 mv "$path" artifacts/

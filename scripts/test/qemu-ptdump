@@ -33,7 +33,7 @@ def test(name, cpu, machine):
         return False
 
 
-    def test(p):
+    def test(qconf, p):
         p.cmd('mount -t debugfs none /sys/kernel/debug')
         p.send('cat /sys/kernel/debug/kernel_page_tables')
         i = p.expect(["can't open '/sys/kernel/debug/kernel_page_tables': No such file or directory",
@@ -56,7 +56,7 @@ def test(name, cpu, machine):
 
         p.expect_prompt()
 
-    qconf.callback = test
+    qconf.callbacks.append(test)
     qconf.apply_defaults()
 
     return qemu_main(qconf)

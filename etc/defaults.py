@@ -1,0 +1,8 @@
+QEMU_VERSION = '9.0.2'
+
+DEFAULT_OLD_IMAGE = 'korg@5.5.0'
+DEFAULT_NEW_IMAGE = 'fedora'
+DEFAULT_IMAGES = [DEFAULT_OLD_IMAGE, DEFAULT_NEW_IMAGE]
+
+CLANG_IMAGES = ['fedora', 'ubuntu']
+SPARSE_IMAGES = ['fedora', 'ubuntu']

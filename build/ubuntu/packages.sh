@@ -20,7 +20,9 @@ if [[ "$machine" == "ppc64le" ]]; then
     PACKAGES+=" libhugetlbfs-dev"
     PACKAGES+=" libmnl-dev"
     PACKAGES+=" libmount-dev"
-    PACKAGES+=" liburing-dev"
+    if [[ "$major" -gt 20 ]]; then
+        PACKAGES+=" liburing-dev"
+    fi
 
     # For the x86_64 container
     if [[ "$major" -ge 21 ]]; then

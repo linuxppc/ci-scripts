@@ -117,14 +117,6 @@ if [[ -n "$https_proxy" ]]; then
     cmd+="--build-arg https_proxy=$https_proxy "
 fi
 
-if [[ -z "$UID" ]]; then
-    UID=$(id -u)
-fi
-
-if [[ -z "$GID" ]]; then
-    GID=$(id -g)
-fi
-
 if [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg compiler_version=$version "
     arch=$(uname -m)
@@ -132,8 +124,6 @@ if [[ "$distro" == "korg" ]]; then
     cmd+="--build-arg tar_file=${arch}-gcc-${version}-nolibc-powerpc64-linux.tar.xz "
 fi
 
-cmd+="--build-arg uid=$UID "
-cmd+="--build-arg gid=$GID "
 cmd+="--build-arg from=$from "
 cmd+="--build-arg apt_mirror=$APT_MIRROR "
 cmd+="-t $image ."

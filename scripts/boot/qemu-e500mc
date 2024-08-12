@@ -8,18 +8,6 @@
 # $ cd ~/src/linux
 # $ make
 # $ ~/src/ci-scripts/scripts/boot/qemu-e500mc
-#
-# Or:
-#
-# export VMLINUX_PATH=~/src/linux/vmlinux
-# export KERNEL_RELEASE_PATH=~/src/linux/include/config/kernel.release
-#
-# Optional:
-# export QEMU_SYSTEM_PPC=~/src/qemu/ppc-softmmu/qemu-system-ppc
-# export ROOT_DISK_PATH=~/some/directory
-#
-# Expects ROOT_DISK_PATH to contain:
-#   ppc-rootfs.cpio.gz
 
 import logging
 import os, sys
@@ -35,7 +23,7 @@ def main():
     qconf = QemuConfig('ppce500')
     qconf.configure_from_env()
     qconf.configure_from_args(sys.argv[1:])
-    qconf.qemu_path = 'qemu-system-ppc'
+    qconf.qemu_cmd = 'qemu-system-ppc'
     qconf.mem = '2G'
     qconf.smp = 1
     qconf.cpu = 'e500mc'

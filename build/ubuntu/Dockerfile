@@ -8,8 +8,8 @@ ARG apt_mirror
 ENV apt_mirror=${apt_mirror}
 RUN [ -n "$apt_mirror" ] && sed -i -e "s|ports.ubuntu.com|$apt_mirror|" /etc/apt/sources.list || true
 
-# Deal with Ubuntu 21.10 repos moving to old-releases (ppc64le only)
-RUN if echo "$from" | grep -q ".*ubuntu:21.10"; then sed -i -e "s|ports.ubuntu.com/ubuntu-ports|old-releases.ubuntu.com/ubuntu|" /etc/apt/sources.list; fi
+# Deal with Ubuntu 21/22.10 repos moving to old-releases (ppc64le only)
+RUN if echo "$from" | grep -q ".*ubuntu:2[12]\.10"; then sed -i -e "s|ports.ubuntu.com/ubuntu-ports|old-releases.ubuntu.com/ubuntu|" /etc/apt/sources.list; fi
 
 RUN apt-get -q -y update && \
     DEBIAN_FRONTEND=noninteractive \
@@ -52,11 +52,7 @@ RUN apt-get -q -y update && \
 COPY ubuntu/make-links.sh /tmp/make-links.sh
 RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
 
-ARG uid
-ARG gid
-
-RUN groupadd --gid $gid linuxppc
-RUN useradd --uid $uid --gid $gid linuxppc
+RUN useradd linuxppc
 USER linuxppc
 
 COPY scripts/container-build.sh /bin/container-build.sh

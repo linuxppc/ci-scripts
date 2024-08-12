@@ -7,17 +7,9 @@ import time
 from datetime import datetime
 
 
-def debug_level():
-    if '-v' in sys.argv:
-        return 1
-    if '-vv' in sys.argv:
-        return 2
-    return 0
-
-
 def setup_logging(format='%(levelname)s: %(message)s'):
      level = logging.INFO
-     if debug_level() >= 1:
+     if '-v' in sys.argv:
         level = logging.DEBUG
 
      logging.basicConfig(format=format, level=level, stream=sys.stdout)
@@ -69,26 +61,59 @@ def check_env_vars(names):
 
 
 def get_vmlinux():
-    vmlinux = get_env_var('VMLINUX_PATH', 'vmlinux')
-    if not os.path.isfile(vmlinux):
-        logging.error("Can't read kernel 'vmlinux'! Try setting VMLINUX_PATH")
-        return None
+    env = get_env_var('KBUILD_OUTPUT', None)
+    if env:
+        path = f'{env}/vmlinux'
+        if os.path.isfile(path):
+            return path
 
-    return vmlinux
+    path = 'vmlinux'
+    if os.path.isfile(path):
+        return path
+
+    return None
+
+
+def get_tarball(basename):
+    dirs = ['.']
+    env = get_env_var('KBUILD_OUTPUT', None)
+    if env:
+        dirs.append(env)
+
+    for base in dirs:
+        for suffix in ['gz', 'bz2', 'xz']:
+            name = f'{base}/{basename}.tar.{suffix}'
+            if os.path.isfile(name):
+                return name
+
+    return None
+
+
+def get_modules_tarball():
+    return get_tarball('modules')
+
+
+def get_selftests_tarball():
+    return get_tarball('selftests')
+
+def read_expected_release(path):
+    expected_release = open(path).read().strip()
+    return expected_release
 
 
 def get_expected_release():
-    env = os.environ.get('KERNEL_RELEASE_PATH', None)
-    for path in [env, 'include/config/kernel.release', 'kernel.release']:
-        if path and os.path.isfile(path):
-            break
-    else:
-        logging.error(f"Couldn't find kernel.release, export KERNEL_RELEASE_PATH")
-        return None
+    candidates = []
+    default_path = 'include/config/kernel.release'
+    env = os.environ.get('KBUILD_OUTPUT', None)
+    if env:
+        candidates.append(f'{env}/{default_path}')
 
-    expected_release = open(path).read().strip()
-    logging.info(f'Looking for kernel version: {expected_release}')
-    return expected_release
+    candidates.extend([default_path, 'kernel.release'])
+    for path in candidates:
+        if os.path.isfile(path):
+            return read_expected_release(path)
+
+    return None
 
 
 def test_harness(func, name, *args, **kwargs):

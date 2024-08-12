@@ -29,11 +29,7 @@ RUN apt-get -q -y update && \
       && \
     rm -rf /var/lib/apt/lists/* /var/cache/* /var/log/dpkg.log
 
-ARG uid
-ARG gid
-
-RUN groupadd --gid $gid linuxppc
-RUN useradd --uid $uid --gid $gid linuxppc
+RUN useradd linuxppc
 USER linuxppc
 
 COPY scripts/container-build.sh /bin/container-build.sh

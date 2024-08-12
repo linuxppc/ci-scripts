@@ -38,17 +38,17 @@ def test(name, cpu, machine):
     qconf.cpu = cpu
     qconf.accel = kvm_or_tcg(machine, cpu)
 
-    def test(p):
+    def test(qconf, p):
         p.cmd('mount -t debugfs none /sys/kernel/debug')
 
         for trigger in triggers:
             p.send(f"sh -c 'echo {trigger} > /sys/kernel/debug/provoke-crash/DIRECT'")
             p.expect(p.prompt, bug_patterns=[])
 
-    qconf.callback = test
+    qconf.callbacks.append(test)
     qconf.apply_defaults()
 
-    if cpu.upper() == 'POWER10' and not qemu_supports_p10(qconf.qemu_path):
+    if cpu.upper() == 'POWER10' and not qemu_supports_p10(qconf.qemu_cmd):
         return None
 
     return qemu_main(qconf)

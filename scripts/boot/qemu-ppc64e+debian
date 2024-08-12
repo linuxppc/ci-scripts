@@ -3,6 +3,4 @@
 # $ make corenet64_smp_defconfig
 # $ make guest.config
 
-export CLOUD_IMAGE=debian-sid-powerpc.qcow2
-
-exec "$(dirname "$0")"/qemu-ppc64e $@
+exec "$(dirname "$0")"/qemu-ppc64e --cloud-image debian-sid-powerpc.qcow2 "$@"

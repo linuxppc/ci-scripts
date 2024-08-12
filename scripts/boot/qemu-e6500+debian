@@ -5,7 +5,4 @@
 # $ echo CONFIG_E6500_CPU=y >> .config
 # $ make olddefconfig
 
-export CPU=e6500
-export CLOUD_IMAGE=debian-sid-powerpc.qcow2
-
-exec "$(dirname "$0")"/qemu-ppc64e $@
+exec "$(dirname "$0")"/qemu-ppc64e --cpu e6500 --cloud-image debian-sid-powerpc.qcow2 "$@"

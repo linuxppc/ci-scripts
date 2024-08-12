@@ -2,7 +2,6 @@ import logging
 import pexpect
 import sys
 import time
-from utils import debug_level
 
 
 class PexpectHelper:
@@ -23,7 +22,8 @@ class PexpectHelper:
     def spawn(self, *args, **kwargs):
         logging.debug("Spawning '%s'" % args)
         quiet = kwargs.pop('quiet', False)
-        self.child = pexpect.spawn(*args, encoding='utf-8', echo=False, **kwargs)
+        self.child = pexpect.spawn(*args, encoding='utf-8', codec_errors='replace',
+                                   echo=False, **kwargs)
         if not quiet:
             self.log_to(sys.stdout)
 
@@ -38,9 +38,12 @@ class PexpectHelper:
         self.child.terminate()
         self.wait_for_exit()
 
-    def drain_and_terminate(self):
+    def drain(self):
         # Wait for 10s out of output, which should give oopses time to be logged
         self.child.expect([pexpect.TIMEOUT, pexpect.EOF], timeout=10)
+
+    def drain_and_terminate(self):
+        self.drain()
         self.terminate()
 
     def get_match(self, i=0):
@@ -99,10 +102,12 @@ def standard_boot(p, login=False, user='root', password=None, timeout=-1):
     logging.info("Waiting for kernel to boot")
     i = p.expect([p.prompt, "login:", "Freeing unused kernel "], timeout=timeout)
 
-    if i == 0:
+    if i == 0 and not login:
         # We booted straight to a prompt, we're done
-        pass
-    elif login:
+        logging.info("Booted direct to shell prompt")
+        return
+
+    if login:
         if i != 1:
             logging.info("Kernel came up, waiting for login ...")
             p.expect("login:", timeout=timeout)

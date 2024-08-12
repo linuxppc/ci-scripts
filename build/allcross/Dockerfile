@@ -38,7 +38,7 @@ RUN apt-get -q -y update && \
       libc-dev \
       libelf-dev \
       libfuse-dev \
-      liblz4-tool \
+      lz4 \
       libssl-dev \
       lzop \
       make \
@@ -52,11 +52,7 @@ RUN apt-get -q -y update && \
       xz-utils && \
     rm -rf /var/lib/apt/lists/* /tmp/packages.sh /var/cache/* /var/log/dpkg.log
 
-ARG uid
-ARG gid
-
-RUN groupadd --gid $gid linuxppc
-RUN useradd --uid $uid --gid $gid linuxppc
+RUN useradd linuxppc
 USER linuxppc
 
 COPY scripts/container-build.sh /bin/container-build.sh

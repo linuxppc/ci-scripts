@@ -1,5 +1,3 @@
 #!/bin/bash
 
-export CLOUD_IMAGE=debian-sid-powerpc.qcow2
-
-exec "$(dirname "$0")"/qemu-g5 $@
+exec "$(dirname "$0")"/qemu-g5 --cloud-image debian-sid-powerpc.qcow2 "$@"

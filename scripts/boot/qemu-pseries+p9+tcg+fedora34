@@ -1,7 +1,3 @@
 #!/bin/bash
 
-export CPU=POWER9
-export ACCEL=tcg
-export CLOUD_IMAGE=fedora34-cloudimg-ppc64le.qcow2
-
-exec "$(dirname "$0")"/qemu-pseries $@
+exec "$(dirname "$0")"/qemu-pseries --cpu POWER9 --cloud-image fedora34-cloudimg-ppc64le.qcow2 "$@"
