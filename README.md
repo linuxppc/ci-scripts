@@ -5,28 +5,31 @@ Scripts I use to do continuous integration for linuxppc.
 
 Still (and probably always) under heavy development.
 
+> [!NOTE]
+> The scripts notionally work with `docker` or `podman`, but they're only regularly tested with `podman` on Fedora.
+
 Quick start
 -----------
 
 Make sure you can run containers.
 
-On Ubuntu the scripts will use `docker`, on Fedora they will use `podman`.
+On Fedora the scripts will use `podman`, on Ubuntu they use `docker`, 
 
 You need a Linux source tree, which hasn't been built in. You can make sure it's
 clean with `make mrproper`, or clone a fresh tree.
 
-Clone this repo.
+Clone this repo. The examples use `~/ci-scripts` for brevity, but the repo can be located anywhere.
 
 ```
 $ cd ci-scripts
 $ cd build
-$ make pull-image@ppc64le@ubuntu
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu JFACTOR=$(nproc)
+$ make pull-image@ppc64le@fedora
+$ make SRC=~/src/linux kernel@ppc64le@fedora JFACTOR=$(nproc)
 ```
 
-This will build you a `ppc64le_defconfig` using the latest Ubuntu toolchain.
+This will build you a `ppc64le_defconfig` using the latest Fedora toolchain.
 
-The kernel will be in `output/ppc64le@ubuntu/ppc64le_defconfig/vmlinux`.
+The kernel will be in `~/ci/scripts/build/output/latest-kernel/vmlinux`.
 
 For more help try `make help`.
 
@@ -36,14 +39,14 @@ Building different defconfigs
 You can specify a defconfig with `DEFCONFIG`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu DEFCONFIG=powernv_defconfig JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64le@fedora DEFCONFIG=powernv_defconfig JFACTOR=$(nproc)
 ```
 
 Note that the subarch (eg. `ppc64le`) needs to match the defconfig, so to build
 `ppc64_defconfig`, use `ppc64`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64@ubuntu DEFCONFIG=ppc64_defconfig JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64@fedora DEFCONFIG=ppc64_defconfig JFACTOR=$(nproc)
 ```
 
 Different toolchains
@@ -51,7 +54,12 @@ Different toolchains
 
 There are images for various toolchains, they are encoded in the distro name/version.
 
+ - `korg@14.2.0`: kernel.org gcc 14.2.0, binutils 2.42
+ - `korg@14.1.0`: kernel.org gcc 14.1.0, binutils 2.42
+ - `korg@13.3.0`: kernel.org gcc 13.1.0, binutils 2.42
+ - `korg@13.2.0`: kernel.org gcc 13.1.0, binutils 2.41
  - `korg@13.1.0`: kernel.org gcc 13.1.0, binutils 2.40
+ - `korg@12.4.0`: kernel.org gcc 12.3.0, binutils 2.42
  - `korg@12.3.0`: kernel.org gcc 12.3.0, binutils 2.40
  - `korg@12.2.0`: kernel.org gcc 12.2.0, binutils 2.39
  - `korg@12.1.0`: kernel.org gcc 12.1.0, binutils 2.38
@@ -108,13 +116,13 @@ Other options
 
 As mentioned above you pass the make -j factor with `JFACTOR=n`.
 
-To run sparse use the `ubuntu` image and pass `SPARSE=2`.
+To run sparse use the `fedora` image and pass `SPARSE=2`.
 
 ```
-$ make SRC=~/src/linux kernel@ppc64le@ubuntu SPARSE=2 JFACTOR=$(nproc)
+$ make SRC=~/src/linux kernel@ppc64le@fedora SPARSE=2 JFACTOR=$(nproc)
 ```
 
-The log will be in eg. `output/ppc64le@ubuntu/ppc64le_defconfig/sparse.log`.
+The log will be in eg. `~/ci-scripts/build/output/latest-kernel/sparse.log`.
 
 To only run sparse on files being recompiled, pass `SPARSE=1`.
 
@@ -144,7 +152,7 @@ Building your own image
 If you don't want to pull an untrusted image, you can build it yourself with:
 
 ```
-$ make rebuild-image@ppc64le@ubuntu
+$ make rebuild-image@ppc64le@fedora
 ```
 
 Note that the build mounts the source tree read-only, so nothing it does can
@@ -166,17 +174,19 @@ $ cd ~/linux
 ```
 
 ```
-$ make SRC=$PWD -C ~/ci-scripts/build QUIET=1 JFACTOR=$(nproc) ppctests@ppc64le@ubuntu@16.04 INSTALL=1
+$ make SRC=$PWD -C ~/ci-scripts/build QUIET=1 JFACTOR=$(nproc) ppctests@ppc64le@ubuntu@22.04 INSTALL=1
 ```
 
-:rotating_light: Using an old Ubuntu image uses an older libc, which is more
-likely to be present on the guest root filesystem. Another option is to build
-the selftests statically.
+> [!NOTE]
+> :rotating_light: Building the selftests with Ubuntu 22.04 uses glibc 2.35.
+> The default rootdisk uses glibc 2.36, so there should be no issue with missing
+> symbols in glibc. If using another root disk you may need to build with an older
+> Ubuntu image. Another option is to build the selftests statically.
 
 Tar up the selftests into the current directory, the qemu scripts will detect them:
 
 ```
-$ tar -czf selftests.tar.gz -C $HOME/ci-scripts/build/output/selftests_powerpc@ppc64le@ubuntu@16.04/ install
+$ tar -czf selftests.tar.gz -C $HOME/ci-scripts/build/output/latest-selftests/ install
 ```
 
 ```

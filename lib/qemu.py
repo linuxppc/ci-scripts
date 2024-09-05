@@ -294,7 +294,7 @@ class QemuConfig:
 
         if self.prompt is None:
             # Default prompt for our root disks
-            self.prompt = "/ #"
+            self.prompt = "~ #"
 
         if self.initrd is None and len(self.drives) == 0 and self.cloud_image is None:
             if self.compat_rootfs or self.qemu_cmd.endswith('qemu-system-ppc'):
