@@ -13,6 +13,7 @@ RUN dnf -y install --setopt=install_weak_deps=False \
         elfutils-libelf-devel \
         findutils \
         flex \
+        gawk \
         gcc \
         gcc-powerpc64le-linux-gnu \
         gcc-powerpc64-linux-gnu \

@@ -25,6 +25,37 @@ def clang_image(images):
     return None
 
 
+# Check that `image` is at least as new as one of the images
+# in the `versions` list.
+def image_at_least(image, versions):
+    # Split the image into the name and optional version number
+    parts = image.split('@')
+    iname = parts[0]
+    if len(parts) == 2:
+        iversion = int(parts[1].replace('.', ''))
+    else:
+        iversion = None
+
+    for version in versions:
+        vname, vver = version.split('@')
+
+        # If the names don't match continue
+        if iname != vname:
+            continue
+
+        # If the input image has no version it's implicitly the latest, so
+        # assume it's sufficiently new.
+        if iversion is None:
+            return True
+
+        # Compare the version numbers
+        vver = int(vver.replace('.', ''))
+        if iversion >= vver:
+            return True
+
+    return False
+
+
 def qemu_coverage(args, suite=None):
     images = std_images(args)
     if suite is None:
@@ -69,9 +100,6 @@ def qemu_coverage(args, suite=None):
         # BOOK3S64 && BIG_ENDIAN
         # PSERIES, POWERNV, CELL, PS3, PMAC && PMAC64, PASEMI, MAPLE
         k('ppc64_guest_defconfig+lockdep', image, merge_config=guest_configs + ['lockdep-y'])
-        # As above with 4K page size
-        k('ppc64le_guest_defconfig+4k', image, merge_config=guest_configs_4k)
-        k('ppc64_guest_defconfig+4k', image, merge_config=guest_configs_4k)
         # G5
         k('g5_defconfig', image, merge_config=g5_configs)
         # BOOK3E_64
@@ -84,10 +112,19 @@ def qemu_coverage(args, suite=None):
         # 8xx
         k('mpc885_ads_defconfig', image)
 
+        # 4K PAGE_SIZE builds, default builds are 64K
+        k('ppc64le_guest_defconfig+4k', image, merge_config=guest_configs_4k)
+        k('ppc64_guest_defconfig+4k', image, merge_config=guest_configs_4k)
+        k('g5_defconfig+4k', image, merge_config=g5_configs + ['4k-pages'])
+
         # PPC_85xx
-        if image != "korg@5.5.0":
-            k('corenet32_smp_defconfig', image, merge_config=['debug-info-n'])
-            b('qemu-e500mc', 'corenet32_smp_defconfig', image)
+        ppc85xx_image = image
+        if not image_at_least(image, ['fedora@31', 'korg@8.5.0']):
+            # The 85xx builds hit gcc segfaults with earlier compilers, so use 8.5.0
+            ppc85xx_image = 'korg@8.5.0'
+
+        k('corenet32_smp_defconfig', ppc85xx_image,  merge_config=['debug-info-n'])
+        b('qemu-e500mc', 'corenet32_smp_defconfig', ppc85xx_image)
 
         # PPC_BOOK3S_32
         b('qemu-mac99', 'pmac32_defconfig', image)
@@ -102,15 +139,21 @@ def qemu_coverage(args, suite=None):
         # G5
         b('qemu-g5', 'g5_defconfig', image)
         b('qemu-g5+compat', 'g5_defconfig', image)
+        b('qemu-g5', 'g5_defconfig+4k', image)
+        b('qemu-g5+compat', 'g5_defconfig+4k', image)
+
         # pseries boots
         b('qemu-pseries+p10+tcg',  'ppc64le_guest_defconfig+lockdep', image)
         b('qemu-pseries+p10+tcg',  'ppc64_guest_defconfig+lockdep',   image)
+        b('qemu-pseries+p10+tcg',  'ppc64le_guest_defconfig+4k', image)
 
         b(f'qemu-pseries+p8+{accel}',   'ppc64le_guest_defconfig+lockdep', image)
         b(f'qemu-pseries+p9+{accel}',   'ppc64le_guest_defconfig+lockdep', image)
         b(f'qemu-pseries+p8+{accel}',   'ppc64_guest_defconfig+lockdep',   image)
         b(f'qemu-pseries+p9+{accel}',   'ppc64_guest_defconfig+lockdep',   image)
         b(f'qemu-pseries+p9+{accel}+fedora39', 'ppc64le_guest_defconfig+lockdep', image)
+        b(f'qemu-pseries+p9+{accel}+fedora39', 'ppc64le_guest_defconfig+4k', image)
+
         # powernv boots
         b('qemu-powernv+p8+tcg',       'ppc64le_guest_defconfig+lockdep', image)
         b('qemu-powernv+p9+tcg',       'ppc64le_guest_defconfig+lockdep', image)
@@ -118,6 +161,7 @@ def qemu_coverage(args, suite=None):
         b('qemu-powernv+p8+tcg',       'ppc64_guest_defconfig+lockdep',   image)
         b('qemu-powernv+p9+tcg',       'ppc64_guest_defconfig+lockdep',   image)
         b('qemu-powernv+p10+tcg',      'ppc64_guest_defconfig+lockdep',   image)
+        b('qemu-powernv+p10+tcg',      'ppc64_guest_defconfig+4k',        image)
 
 
     for image in ['ubuntu@16.04', 'ubuntu']:
@@ -171,19 +215,25 @@ def full_compile_test(args, suite=None):
         # BOOK3S64 && BIG_ENDIAN
         # PSERIES, POWERNV, CELL, PS3, PMAC && PMAC64, PASEMI, MAPLE
         k('ppc64_guest_defconfig', image, merge_config=guest_configs)
-        # As above with 4K page size
-        k('ppc64le_guest_defconfig+4k', image, merge_config=guest_configs_4k)
-        k('ppc64_guest_defconfig+4k', image, merge_config=guest_configs_4k)
         # PMAC && PMAC64
         k('g5_defconfig', image, merge_config=g5_configs)
         # BOOK3E_64
         k('corenet64_smp_defconfig', image, merge_config=corenet64_configs)
+
+        ppc85xx_image = image
+        if not image_at_least(image, ['fedora@31', 'korg@8.5.0']):
+            # The 85xx builds hit gcc segfaults with earlier compilers, so use 8.5.0
+            ppc85xx_image = 'korg@8.5.0'
+
         # PPC_85xx, PPC_E500MC
-        k('corenet32_smp_defconfig', image, merge_config=['debug-info-n'])
+        k('corenet32_smp_defconfig', ppc85xx_image, merge_config=['debug-info-n'])
         # PPC_85xx, SMP=y, PPC_E500MC=n
-        k('mpc85xx_smp_defconfig', image)
+        k('mpc85xx_smp_defconfig', ppc85xx_image)
         # PPC_85xx, SMP=n
-        k('mpc85xx_defconfig', image)
+        k('mpc85xx_defconfig', ppc85xx_image)
+        # PPC_85xx + RANDOMIZE_BASE
+        k('mpc85xx_smp_defconfig+kaslr', ppc85xx_image, merge_config=['randomize-base-y'])
+
         # PPC_BOOK3S_32
         k('pmac32_defconfig', image, merge_config=pmac32_configs)
         k('pmac32_defconfig+smp', image, merge_config=pmac32_configs + ['smp-y'])
@@ -206,19 +256,22 @@ def full_compile_test(args, suite=None):
         # Doesn't exist
         #k('ppc64le_allyesconfig', image)
 
-        # GCC 5.5.0 fails on various things for allyes/allmod
-        tmp_image = image.replace('korg@5.5.0', 'korg@8.5.0')
+        allyesmod_image = image
+        if not image_at_least(image, ['fedora@31', 'korg@8.5.0']):
+            # GCC 5.5.0 fails on various things for allyes/allmod
+            allyesmod_image = 'korg@8.5.0'
+
         # 64-bit Book3S BE
-        k('allyesconfig', tmp_image, merge_config=no_gcc_plugins)
+        k('allyesconfig', allyesmod_image, merge_config=no_gcc_plugins)
         # 64-bit Book3S BE
-        k('allmodconfig', tmp_image, merge_config=no_gcc_plugins)
+        k('allmodconfig', allyesmod_image, merge_config=no_gcc_plugins)
         # 64-bit Book3S LE
-        k('ppc64le_allmodconfig', tmp_image, merge_config=no_gcc_plugins)
+        k('ppc64le_allmodconfig', allyesmod_image, merge_config=no_gcc_plugins)
         # 32-bit Book3S BE (korg 5.5.0 doesn't build)
-        k('ppc32_allmodconfig', tmp_image, merge_config=no_gcc_plugins)
+        k('ppc32_allmodconfig', allyesmod_image, merge_config=no_gcc_plugins)
         # 64-bit BOOK3E BE (korg 5.5.0 doesn't build)
         # FIXME Broken due to start_text_address problems
-        # k('ppc64_book3e_allmodconfig', tmp_image, merge_config=no_gcc_plugins)
+        # k('ppc64_book3e_allmodconfig', allyesmod_image, merge_config=no_gcc_plugins)
 
         ######################################### 
         # specific machine/platform configs
@@ -248,23 +301,46 @@ def full_compile_test(args, suite=None):
         # PPC_8xx + PPC16K_PAGES
         k('mpc885_ads_defconfig+16k', image, merge_config=['16k-pages'])
 
+        # 4K PAGE_SIZE builds, default builds are 64K
+        k('ppc64le_guest_defconfig+4k', image, merge_config=guest_configs_4k)
+        k('ppc64_guest_defconfig+4k', image, merge_config=guest_configs_4k)
+        k('g5_defconfig+4k', image, merge_config=g5_configs + ['4k-pages'])
+
         ######################################### 
         # specific enabled features
         ######################################### 
-        for feature in ['preempt', 'compat', 'lockdep', 'reltest']:
+        for feature in ['preempt', 'compat', 'lockdep', 'reltest', 'opt-for-size']:
             k(f'ppc64_defconfig+{feature}',   image, merge_config=[f'{feature}-y'])
             k(f'ppc64le_defconfig+{feature}', image, merge_config=[f'{feature}-y'])
+
+        pcrel_image = image
+        if not image_at_least(image, ['fedora@36', 'korg@12.1.0']):
+            # Only GCC >= 12 can build pcrel because it needs -mcpu=power10
+            pcrel_image = 'korg@12.1.0'
+
+        k('ppc64le_defconfig+pcrel', pcrel_image, merge_config=['pcrel-y'])
+        # FIXME doesn't build
+        # k('ppc64_defconfig+pcrel',   pcrel_image, merge_config=['pcrel-y'])
 
         ######################################### 
         # specific disabled features
         ######################################### 
-        for feature in ['radix', 'modules']:
+        for feature in ['radix', 'hpt-mmu']:
+            feat_image = image
+            if feature == 'hpt-mmu' and not image_at_least(image, ['fedora@36', 'korg@12.1.0']):
+                # Only GCC >= 12 can build HPT=n because it needs -mcpu=power10
+                feat_image = 'korg@12.1.0'
+            
+            k(f'ppc64_defconfig+no{feature}',   feat_image, merge_config=[f'{feature}-n'])
+            k(f'ppc64le_defconfig+no{feature}', feat_image, merge_config=[f'{feature}-n'])
+            k(f'ppc64_defconfig+no{feature}+4k',   feat_image, merge_config=[f'{feature}-n', '4k-pages'])
+            k(f'ppc64le_defconfig+no{feature}+4k', feat_image, merge_config=[f'{feature}-n', '4k-pages'])
+
+        k('ppc64_defconfig+noelf-abi-v2',   image, merge_config=['elf-abi-v2-n'])
+
+        for feature in ['modules']:
             k(f'ppc64_defconfig+no{feature}',   image, merge_config=[f'{feature}-n'])
             k(f'ppc64le_defconfig+no{feature}', image, merge_config=[f'{feature}-n'])
-
-        # PPC_85xx + RANDOMIZE_BASE
-        # This hits gcc segfaults with earlier compilers, so use 8.5.0
-        k('mpc85xx_smp_defconfig+kaslr', image.replace('korg@5.5.0', 'korg@8.5.0'), merge_config=['randomize-base-y'])
 
     ######################################### 
     # selftests

@@ -20,20 +20,22 @@ image="linuxppc/build:$distro-$version"
 if [[ "$distro" == "fedora" ]]; then
     from="registry.fedoraproject.org/$distro:$version"
 elif [[ "$distro" == "docs" ]]; then
-    from="docker.io/ubuntu:$version"
+    from="public.ecr.aws/ubuntu/ubuntu:$version"
 elif [[ "$distro" == "allcross" ]]; then
-    from="docker.io/debian:$version"
+    from="public.ecr.aws/debian/debian:$version"
 elif [[ "$distro" == "korg" ]]; then
     # Use an older distro for the 5.x toolchains.
     if [[ "$version" == 5.* ]]; then
-        from="docker.io/ubuntu:16.04"
+        from="public.ecr.aws/docker/library/ubuntu:16.04"
     elif [[ "$version" == 13.* ]]; then
-        from="docker.io/ubuntu:23.04"
+        from="public.ecr.aws/ubuntu/ubuntu:23.04"
     else
-        from="docker.io/ubuntu:20.04"
+        from="public.ecr.aws/ubuntu/ubuntu:20.04"
     fi
+elif [[ "$distro" == "ubuntu" && "$version" == 16.* ]]; then
+    from="public.ecr.aws/docker/library/ubuntu:16.04"
 else
-    from="docker.io/$distro:$version"
+    from="public.ecr.aws/$distro/$distro:$version"
 fi
 
 if [[ "$task" == "image" ]]; then

@@ -17,6 +17,7 @@ RUN apt-get -q -y update && \
       dwarves \
       file \
       flex \
+      gawk \
       gcc \
       gcc-powerpc-linux-gnu g++-powerpc-linux-gnu \
       gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \

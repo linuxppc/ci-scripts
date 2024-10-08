@@ -18,6 +18,7 @@ RUN apt-get -q -y update && \
       dwarves \
       file \
       flex \
+      gawk \
       gcc \
       git \
       kmod \
