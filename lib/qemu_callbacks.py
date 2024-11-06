@@ -1,5 +1,6 @@
 import logging
 from utils import setup_timeout
+from pexpect_utils import ignore_warnings
 
 ########################################
 # Callbacks that can run once the VM has booted
@@ -69,6 +70,12 @@ def run_selftests(qconf, p, arg=None, check=True):
 
 def run_selftests_nocheck(qconf, p, arg=None):
     return run_selftests(qconf, p, arg, check=False)
+
+
+# KASAN Kunit test, needs modules
+def kasan_kunit(qconf, p):
+    ignore_warnings(p, lambda p: p.cmd('modprobe kasan_test'))
+    return True
 
 
 # Invoke lkdtm via sysfs

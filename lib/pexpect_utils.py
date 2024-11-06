@@ -198,3 +198,11 @@ def xmon_di(p, addr):
 
     return result
 
+
+def ignore_warnings(p, f):
+    p.cmd('echo "#@@@ ignore warnings @@@#"')
+    bug_patterns = p.bug_patterns
+    p.bug_patterns = []
+    f(p)
+    p.bug_patterns = bug_patterns
+    p.cmd('echo "#@@@ detect warnings @@@#"')

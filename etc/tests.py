@@ -1,4 +1,4 @@
-from ngci import TestSuite, SelftestsBuild, SelftestsConfig, QemuSelftestsConfig, TestConfig, QemuNetTestConfig
+from ngci import *
 from configs import *
 from defaults import *
 from qemu import kvm_present
@@ -358,4 +358,32 @@ def full_compile_and_qemu(args):
     suite = TestSuite('full-compile-and-qemu', qemus=args.qemus)
     full_compile_test(args, suite)
     qemu_coverage(args, suite)
+    return suite
+
+
+def qemu_kasan(args, suite=None):
+    images = std_images(args)
+    if suite is None:
+        suite = TestSuite('qemu-kasan', qemus=args.qemus)
+
+    k = suite.add_kernel
+    b = suite.add_qemu_boot
+
+    for image in images:
+        k('ppc64le_guest_defconfig',  image, merge_config=guest_configs + ['kasan-y'])
+
+        # Just a plain boot
+        b('qemu-pseries+p9+kvm+radix+fedora34', 'ppc64le_guest_defconfig', image,
+          script='qemu-pseries+p9+kvm+fedora34')
+        b('qemu-pseries+p9+kvm+hpt+fedora34', 'ppc64le_guest_defconfig', image,
+          script='qemu-pseries+p9+kvm+fedora34', cmdline='disable_radix')
+
+        # Now boot and test KASAN
+        test = QemuTestConfig('kasan-kunit', ['kasan_kunit'])
+        b('qemu-pseries+p9+kvm+radix+fedora34+kasan', 'ppc64le_guest_defconfig', image,
+          script='qemu-pseries+p9+kvm+fedora34', tests=[test])
+        # FIXME currently broken - some missing kasan_arch_is_ready() or similar
+        #b('qemu-pseries+p9+kvm+hpt+fedora34+kasan', 'ppc64le_guest_defconfig', image,
+        #  script='qemu-pseries+p9+kvm+fedora34', tests=[test], cmdline='disable_radix')
+
     return suite

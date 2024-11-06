@@ -291,6 +291,25 @@ class QemuNetTestConfig(TestConfig):
             boot.args.append('--net-tests')
 
 
+class QemuTestConfig(TestConfig):
+    def __init__(self, name, callbacks=[]):
+        super().__init__(f'qemu-test-{name}')
+        self.callbacks = callbacks
+
+    def setup(self, state, boot, test_dir):
+        start_marker = f'starting-{self.name}'
+        end_marker = f'end-{self.name}'
+
+        # Script doesn't run the tests, just greps the qemu console.log
+        gen_script(f'{test_dir}/run.sh',
+            f"awk '/{start_marker}/, /{end_marker}/' ../console.log | tee extracted.log")
+
+        boot.callbacks.append(f'sh(# {start_marker})')
+        for callback in self.callbacks:
+            boot.callbacks.append(callback)
+        boot.callbacks.append(f'sh(# {end_marker})')
+
+
 class QemuSelftestsConfig(TestConfig):
     def __init__(self, selftest_build, collection=None, exclude=[], extra_callbacks=[]):
         name = 'qemu-selftests'

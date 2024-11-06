@@ -228,3 +228,59 @@ More than one selftest can be run by passing multiple arguments to
 
 From there the bisection can either be run by hand, or fully automated by
 creating a script to build the kernel and run the qemu test.
+
+Using the powerpc debian image
+------------------------------
+
+The debian powerpc image in `root-disks` can be used to test big endian kernels.
+It also exercises COMPAT, which is not tested on ppc64le these days.
+
+The kernel needs virtio drivers as well as 9PFS built-in. For example to get it
+booting with `g5_defconfig`:
+
+```
+$ cd linux
+$ ~/ci-scripts/scripts/misc/apply-configs.py 9p guest_configs cgroups-y
+$ make g5_defconfig vmlinux
+$ ~/ci-scripts/boot/qemu-g5+debian
+```
+
+To do interactive testing, run the boot script with `--interactive`, the login
+is `root/linuxppc`.
+
+Once logged in, to install packages a few steps are needed.
+
+If the network doesn't come up by default:
+```
+dhclient $(basename $(ls -1d /sys/class/net/en*))
+```
+
+If you need to use a http proxy:
+```
+echo 'Acquire::http::Proxy "http://proxy.org:3128";' > /etc/apt/apt.conf.d/00proxy
+```
+
+Tell apt to update package lists while ignoring missing GPG keys:
+```
+apt -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true update
+```
+
+At that point you should be able to install the updated keyring:
+```
+apt install -y --allow-unauthenticated debian-ports-archive-keyring
+```
+
+And update package lists again:
+```
+apt update
+```
+
+Then you should be able to install packages, eg:
+```
+apt install gcc
+```
+
+If you still can't install packages due to GPG errors, you can disable package authentication with:
+```
+echo 'APT::Get::AllowUnauthenticated "true";' > /etc/apt/apt.conf.d/00allow-unauth
+```

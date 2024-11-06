@@ -161,6 +161,8 @@ def filter_log_warnings(infile, outfile):
 
     parser = ConfigParser()
     parser.read_file(open(path))
+    ignore_start = parser['ignore']['start']
+    ignore_stop = parser['ignore']['stop']
     suppressions = [t[1] for t in parser.items('suppressions', [])]
     suppression_patterns = [t[1] for t in parser.items('suppression_patterns', [])]
     suppression_patterns = [re.compile(p) for p in suppression_patterns]
@@ -180,11 +182,20 @@ def filter_log_warnings(infile, outfile):
         return False
 
     found = False
+    ignoring = False
     while True:
         line = infile.readline()
         if len(line) == 0:
             break
 
+        if ignore_stop in line:
+            ignoring = False
+        elif not ignoring and ignore_start in line:
+            ignoring = True
+
+        if ignoring:
+            continue
+            
         if suppress(line):
             continue
 
