@@ -130,6 +130,8 @@ To build modules pass `MODULES=1`
 
 To convert all modules to builtin, pass `MOD2YES=1`.
 
+To build with llvm pass `LLVM=1`, only works using the latest Fedora or Ubuntu image.
+
 To build with clang pass `CLANG=1`, only works using the latest Fedora or Ubuntu image.
 
 For a quiet build pass `QUIET=1`, for verbose pass `VERBOSE=1`.
