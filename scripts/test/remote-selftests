@@ -1,0 +1,124 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+import argparse
+import logging
+from subprocess import run
+from boot_utils import *
+from utils import setup_logging, filter_log_warnings
+
+
+def main(orig_args):
+    setup_logging()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--collection', required=True, type=str, help='Test collection to run')
+    parser.add_argument('-x', dest='exclude', type=str, default=None, action='append', help='Exclude test(s)')
+    parser.add_argument('host', type=str, help='Host to run the test on')
+    args = parser.parse_args(orig_args)
+
+    hostname = f'root@{args.host}'
+    collection = args.collection
+
+    logging.info(f'Selftests ({collection}) starting.')
+
+    logging.info(f'Copying selftests to {hostname} ...')
+    run(['rsync', '-aL', 'selftests.tar.gz', f'{hostname}:/var/tmp/ngci-selftests.tar.gz'], check=True, timeout=minutes(5))
+
+    if collection == 'powerpc':
+        collection = 'powerpc.*'
+
+    if args.exclude:
+        paths = [s.replace('/', r'\/') for s in args.exclude]
+        exprs = [f"-e '/^{s}$/d'" for s in paths]
+        exprs = ' '.join(exprs)
+        remove_excluded = f'sed -i {exprs} kselftest-list.txt'
+    else:
+        remove_excluded = '# none'
+
+    logging.info(f'Running selftests on {hostname} ...')
+    script = f'''
+    set -e
+    echo "-> Running on: $(hostname)"
+    echo "-> Kernel version: $(uname -a)"
+    dmesg -n 8
+    echo "ngci: selftests ({collection}) starting" > /dev/kmsg
+    mkdir -p /var/tmp/ngci
+    cd /var/tmp/ngci
+    rm -rf selftests || true
+    tar -xf /var/tmp/ngci-selftests.tar.gz
+    cd selftests
+
+    echo "Disabling xmon ..."
+    echo 0 > /sys/kernel/debug/powerpc/xmon || true
+
+    echo "Current BPF JIT settings ..."
+    grep . /proc/sys/net/core/bpf_* || true
+    echo "Enabling BPF JIT options ..."
+    echo 1 > /proc/sys/net/core/bpf_jit_enable || true
+    echo 2 > /proc/sys/net/core/bpf_jit_harden || true
+    grep . /proc/sys/net/core/bpf_* || true
+
+    echo 0 > /proc/sys/kernel/perf_event_paranoid || true
+
+    ppc64_cpu --info || true
+
+    echo "-> Running tests ..."
+
+    echo "Excluding tests: {remove_excluded}"
+    {remove_excluded}
+
+    rm -f test.log
+    rc=0
+    (set -o pipefail; ./run_kselftest.sh -c {collection} 2>&1 | tee test.log) || rc=1
+
+    echo "Dumping dmesg after test run:"
+    echo "=============================="
+    dmesg
+    echo "=============================="
+
+    if [[ $rc -ne 0 ]]; then
+        echo "Error: script failed!"
+        echo "-> Finished FAIL"
+        rc=1
+    else
+        rc=1
+        grep -w -e "not ok" -e failure -e FAIL test.log || rc=0
+        if [[ $rc -ne 0 ]]; then
+            echo "Error: Saw failures!"
+            echo "-> Finished FAIL"
+            rc=1
+        else
+            echo "-> Finished OK"
+            rc=0
+        fi
+    fi
+
+    echo "ngci: selftests ({collection}) finishing" > /dev/kmsg
+    exit $rc
+    EOF
+    '''.encode('utf-8')
+
+    f = open('remote.log', 'w')
+    result = run_ssh_script(hostname, script, timeout=minutes(60), stdout=f)
+    f.close()
+
+    if not result:
+        logging.error('Running remote selftests failed!')
+        run(['tail', 'remote.log'])
+
+    patterns = [re.compile('\bnot ok\b'), re.compile('\bfailure:')]
+
+    if filter_log_warnings(open('remote.log'), open('warnings.txt', 'w'), patterns):
+        logging.error('Errors/warnings seen in remote.log')
+        run(['tail', 'warnings.txt'])
+        result = False
+
+    if result:
+        logging.info('Completed OK')
+
+    return result
+
+sys.exit(0 if main(sys.argv[1:]) else 1)

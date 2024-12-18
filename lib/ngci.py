@@ -270,15 +270,24 @@ class TestConfig:
 
 
 class SelftestsConfig(TestConfig):
-    def __init__(self, name, selftest_build):
+    def __init__(self, selftest_build, collection, exclude=[]):
+        name = f'selftests-{collection}'
         super().__init__(name)
-        self.name = name
         self.selftests = selftest_build
+        self.collection = collection
+        self.exclude = exclude
 
     def setup(self, state, boot, test_dir):
         selftests_tar = f'{state.build_dir}/{self.selftests.output_dir}/selftests.tar.gz'
         run(f'ln -sf {selftests_tar}'.split(), cwd=test_dir, check=True)
-        gen_script(f'{test_dir}/run.sh', f'{state.script_dir}/scripts/test/{self.name} {boot.name}\n')
+
+        cmd = [f'{state.script_dir}/scripts/test/remote-selftests']
+        for test in self.exclude:
+            cmd.append(f'-x {test}')
+
+        cmd.append(f'-c {self.collection} {boot.name}\n')
+        cmd = ' '.join(cmd)
+        gen_script(f'{test_dir}/run.sh', cmd)
 
 
 class QemuNetTestConfig(TestConfig):
