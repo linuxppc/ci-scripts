@@ -1,0 +1,33 @@
+#!/usr/bin/python3
+
+import os, sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+
+def main():
+    name = 't4240rdb'
+    xcat = OzXcatSerial(name.upper(), use_pdu=True)
+    b = BasicBoot(name, xcat,
+                  image_dest=f'netboot:/srv/tftp/{name}/uImage',
+                  image_src='uImage')
+
+    def check_nproc(boot):
+        rc, output = run_ssh_cmd(boot.host_ssh_target, 'nproc', capture_output=True, timeout=60)
+        if not rc:
+            logging.error("Running nproc failed")
+            return False
+
+        output = output.strip().decode('utf-8')
+        if output != '24':
+            logging.error(f"Didn't find expected 24 CPUs, only {output}")
+            return False
+
+        return True
+
+    b.callbacks.append(check_nproc)
+
+    return b.boot_main(sys.argv[1:])
+
+sys.exit(main())

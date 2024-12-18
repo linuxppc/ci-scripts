@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+xcat = OzXcat('spork')
+b = PowernvBoot('spork', xcat,
+                'loglevel=7 nosplash no_hash_pointers root=PARTUUID=cffc9ff2-f715-4582-bb38-61466e1d39e9',
+                'netboot:/srv/tftp/spork/vmlinux.dev', 'netboot')
+sys.exit(b.boot_main(sys.argv[1:]))
