@@ -388,3 +388,65 @@ def qemu_kasan(args, suite=None):
         #  script='qemu-pseries+p9+kvm+fedora34', tests=[test], cmdline='disable_radix')
 
     return suite
+
+
+def std_boot(args, hostname, defconfig, merge_configs, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite(hostname)
+
+    for image in images:
+        suite.add_kernel(defconfig, image, merge_config=merge_configs)
+        suite.add_boot(hostname, defconfig, image)
+
+    return suite
+
+
+def std_boot_and_test(args, hostname, defconfig, merge_configs, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite(hostname)
+
+    ppctests = suite.add_selftest('ubuntu@24.04', 'ppc64le', 'ppctests')
+
+    exclude = []
+    # Tends to timeout
+    exclude.append('powerpc/signal:sigfuz')
+    # Requires certain hardware
+    exclude.append('powerpc/eeh:eeh-basic.sh')
+    # Not always reliable depending on firmware settings etc.
+    exclude.append('powerpc/security:spectre_v2')
+    # Flakey
+    exclude.append('powerpc/pmu:count_stcx_fail')
+
+    tests = [SelftestsConfig(ppctests, 'powerpc', exclude)]
+
+    for image in images:
+        suite.add_kernel(defconfig, image, merge_config=merge_configs)
+        suite.add_boot(hostname, defconfig, image, tests=tests)
+
+    return suite
+
+
+def ltcppm1(args, suite=None):
+    return std_boot(args, 'ltcppm1.aus.stglabs.ibm.com', 'powernv_defconfig', powernv_configs,  suite)
+
+def ltcppm2(args, suite=None):
+    return std_boot(args, 'ltcppm2.aus.stglabs.ibm.com', 'ppc64le_guest_config', guest_configs,  suite)
+
+def ltcppm3(args, suite=None):
+    return std_boot_and_test(args, 'ltcppm3.aus.stglabs.ibm.com', 'powernv_defconfig', powernv_configs, suite)
+
+
+def ppm_hw_boots(args):
+    suite = TestSuite('ppm-hw-boots')
+    ltcppm1(args, suite)
+    ltcppm2(args, suite)
+    ltcppm3(args, suite)
+    return suite
