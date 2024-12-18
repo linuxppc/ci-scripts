@@ -450,3 +450,42 @@ def ppm_hw_boots(args):
     ltcppm2(args, suite)
     ltcppm3(args, suite)
     return suite
+
+
+def t4240rdb(args, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite('t4240rdb')
+
+    for image in images:
+        suite.add_kernel('corenet64_smp_defconfig+e6500',  image, merge_config=corenet64_configs + ['e6500-y', 'altivec-y'])
+        suite.add_boot('t4240rdb', 'corenet64_smp_defconfig+e6500', image)
+
+    # XXX Can't run selftests because Void userspace is BE ELFv2
+    # Need to build the tests with a matching toolchain.
+
+    return suite
+
+
+def didgo5(args, suite=None):
+    return std_boot(args, 'didgo5', 'ppc64_guest_defconfig+legacy', legacy_guest_configs, suite)
+
+
+def mpe_g5(args, suite=None):
+    return std_boot(args, 'mpe-g5', 'g5_defconfig', g5_configs, suite)
+
+
+def spork(args, suite=None):
+    return std_boot_and_test(args, 'spork', 'powernv_defconfig', powernv_configs, suite)
+
+
+def oz_hw_boots(args):
+    suite = TestSuite('oz-hw-boots')
+    t4240rdb(args, suite)
+    didgo5(args, suite)
+    mpe_g5(args, suite)
+    spork(args, suite)
+    return suite
