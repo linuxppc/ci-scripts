@@ -315,7 +315,7 @@ class QemuSelftestsConfig(TestConfig):
     def __init__(self, selftest_build, collection=None, exclude=[], extra_callbacks=[]):
         name = 'qemu-selftests'
         if collection:
-            s = collection.replace('/', '_').replace('*', '')
+            s = collection.replace('/', '_').replace('.', '').replace('*', '')
             name = f'{name}-{s}'
         super().__init__(name)
         self.selftests = selftest_build
