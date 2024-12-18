@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+xcat = PpmXcat('ltcppm2')
+b = BasicBoot('ltcppm2.aus.stglabs.ibm.com', xcat,
+                '/srv/images/ltcppm2.aus.stglabs.ibm.com/vmlinux.dev',
+		'ltcppm4.aus.stglabs.ibm.com')
+sys.exit(b.boot_main(sys.argv[1:]))
