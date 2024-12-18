@@ -390,6 +390,59 @@ def qemu_kasan(args, suite=None):
     return suite
 
 
+def qemu_selftests(args):
+    suite = TestSuite('qemu-selftests')
+    k = suite.add_kernel
+    b = suite.add_qemu_boot
+
+    image = 'fedora'
+
+    for arch in ['ppc64', 'ppc64le']:
+        k(f'{arch}_guest_defconfig',  image, merge_config=guest_configs)
+        selftests = suite.add_selftest('ubuntu@20.04', arch)
+
+        exclude = []
+        # Not clear what causes failure
+        exclude.append('powerpc/pmu/ebb:instruction_count_test')
+        exclude.append('powerpc/pmu/ebb:fork_cleanup_test')
+        # Confused by qemu
+        exclude.append('powerpc/security:rfi_flush')
+        exclude.append('powerpc/security:entry_flush')
+        exclude.append('powerpc/security:uaccess_flush')
+        exclude.append('powerpc/security:spectre_v2')
+        # Slow and not that useful for bug finding
+        exclude.append('powerpc/benchmarks:context_switch')
+        exclude.append('powerpc/benchmarks:fork')
+        exclude.append('powerpc/benchmarks:futex_bench')
+        exclude.append('powerpc/benchmarks:mmap_bench')
+        # Tends to timeout
+        exclude.append('powerpc/signal:sigfuz')
+        # Requires certain hardware
+        exclude.append('powerpc/eeh:eeh-basic.sh')
+
+        if arch == 'ppc64le':
+            tests = [QemuSelftestsConfig(selftests, 'powerpc.*', exclude=exclude)]
+            name = 'qemu-pseries+p9+kvm+fedora41'
+            b(name, f'{arch}_guest_defconfig', image, tests=tests)
+        else:
+            # 64-bit tests don't work due to missing libraries
+            exclude.append('powerpc/stringloops:.*')
+            exclude.append('powerpc/copyloops:.*')
+            exclude.append('powerpc/tm:.*')
+            exclude.append('powerpc/pmu.*')
+            exclude.append('powerpc/mm:.*')
+            exclude.append('powerpc/math:.*')
+            exclude.append('powerpc/ptrace:.*')
+            exclude.append('powerpc/papr_sysparm:papr_sysparm')
+            exclude.append('powerpc/switch_endian:switch_endian_test')
+            exclude.append('powerpc/vphn:test-vphn')
+            tests = [QemuSelftestsConfig(selftests, 'powerpc.*', exclude=exclude)]
+            name = 'qemu-pseries+p9+kvm+be+debian'
+            b(name, f'{arch}_guest_defconfig', image, tests=tests)
+
+    return suite
+
+
 def std_boot(args, hostname, defconfig, merge_configs, suite=None):
     images = args.images
     if not images:
