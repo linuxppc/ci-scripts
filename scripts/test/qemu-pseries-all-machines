@@ -1,0 +1,67 @@
+#!/usr/bin/python3
+#
+# Test that basic xmon functions work
+
+import os
+import sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, get_qemu_version
+from utils import setup_logging, test_harness
+
+
+def dump_auxv(p):
+    p.cmd('LD_SHOW_AUXV=1 /bin/true')
+
+
+def test(name, cpu, major, minor):
+    qconf = QemuConfig(f'pseries-{major}.{minor}')
+    qconf.configure_from_env()
+    qconf.mem = '4G'
+    qconf.cpu = cpu
+    qconf.apply_defaults()
+
+    qemu_major, qemu_minor = get_qemu_version(qconf.qemu_path)
+
+    if cpu == 'POWER10' and qemu_major < 7:
+        return None
+
+    if qemu_major < major:
+        return None
+    elif qemu_major == major and qemu_minor < minor:
+        return None
+
+    qconf.callback = dump_auxv
+    qconf.apply_defaults()
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    def t(major, minor):
+        rc = True
+        rc &= test_harness(test, 'pseries', cpu='POWER8', major=major, minor=minor)
+        rc &= test_harness(test, 'pseries', cpu='POWER9', major=major, minor=minor)
+        rc &= test_harness(test, 'pseries', cpu='POWER10', major=major, minor=minor)
+        return rc
+
+    rc = True
+
+    major = 2
+    for minor in range(1, 12 + 1):
+        rc &= t(major, minor)
+
+    major = 3
+    for minor in [0, 1]:
+        rc &= t(major, minor)
+
+    for major in [4, 5, 6, 7]:
+        for minor in [0, 1, 2]:
+            rc &= t(major, minor)
+
+    return rc
+
+
+sys.exit(0 if main() else 1)

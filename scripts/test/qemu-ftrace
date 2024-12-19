@@ -1,0 +1,57 @@
+#!/usr/bin/python3
+#
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, kvm_or_tcg
+from utils import setup_logging, test_harness
+
+
+def test(name, cpu, machine):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '2G'
+    qconf.smp = 4
+    qconf.cpu = cpu
+    qconf.accel = kvm_or_tcg(cpu, machine)
+
+    def test(qconf, p):
+        p.cmd('mount -t debugfs none /sys/kernel/debug')
+
+        p.cmd('time echo function_graph > /sys/kernel/debug/tracing/current_tracer')
+        p.cmd('time echo nop > /sys/kernel/debug/tracing/current_tracer')
+
+        for n in [1, 2, 3]:
+            p.cmd(f'echo 0 > /sys/devices/system/cpu/cpu{n}/online')
+
+        p.cmd('time echo function_graph > /sys/kernel/debug/tracing/current_tracer')
+        p.cmd('time echo nop > /sys/kernel/debug/tracing/current_tracer')
+
+        for n in [1, 2, 3]:
+            p.cmd(f'echo 1 > /sys/devices/system/cpu/cpu{n}/online')
+
+        p.cmd('time echo function_graph > /sys/kernel/debug/tracing/current_tracer')
+        p.cmd('time echo nop > /sys/kernel/debug/tracing/current_tracer')
+        return True
+
+
+    qconf.callbacks.append(test)
+    qconf.apply_defaults()
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    rc = True
+    rc &= test_harness(test, 'ftrace', cpu='power9', machine='pseries')
+
+    return rc
+
+
+sys.exit(0 if main() else 1)

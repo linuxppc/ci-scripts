@@ -1,0 +1,184 @@
+#!/usr/bin/python3
+#
+# Test that the tpm works across kexec
+#
+# Requires 9P, and SECURITY_FS
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, kvm_or_tcg
+from pexpect_utils import standard_boot
+from utils import setup_logging, test_harness
+from dump import read_symbols, find_symbol
+from tempfile import TemporaryDirectory
+from subprocess import run
+import atexit
+
+
+def test(name, cpu, machine, crashk, kdump=False, kexec_file=True):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '4G'
+    qconf.smp = 1
+    qconf.cpu = cpu
+    qconf.accel = kvm_or_tcg(machine, cpu)
+
+    # We need kexec
+    qconf.initrd = 'kexec-rootfs.cpio.gz'
+    qconf.login = True
+    qconf.password = 'linuxppc'
+    qconf.prompt = '# '
+
+    vmlinux_dir = os.path.dirname(qconf.vmlinux)
+    qconf.host_mounts.append(vmlinux_dir)
+    qconf.host_mounts.append(qconf.root_disk_path)
+
+    qconf.cmdline.append(crashk)
+
+    tempdir = TemporaryDirectory(suffix='qemu-tpm', ignore_cleanup_errors=True)
+    atexit.register(lambda: tempdir.cleanup())
+
+    tmp = tempdir.name
+    cmd = f'swtpm socket -d --tpmstate dir={tmp} --ctrl type=unixio,path={tmp}/swtpm-sock --tpm2 --log level=20'
+    logging.info(f"Starting swtpm with: '{cmd}'")
+    run(cmd.split())
+
+    qconf.extra_args.append(f'-chardev socket,id=chrtpm,path={tmp}/swtpm-sock -tpmdev emulator,id=tpm0,chardev=chrtpm -device tpm-spapr,tpmdev=tpm0')
+
+    qconf.apply_defaults()
+
+    def boot(p, timeout, qconf):
+        #p.push_prompt("mon>")
+        #p.expect_prompt()
+        #p.cmd('bd c00000002ffb0000')
+        #p.cmd('b')
+        #p.send('x')
+        #p.pop_prompt()
+        standard_boot(p, qconf.login, qconf.user, qconf.password, timeout)
+
+    qconf.boot_func = boot
+
+    def test(qconf, p):
+        p.send('dmesg | grep -i -e tpm')
+        p.expect('CRQ initialization completed')
+        p.expect_prompt()
+        p.cmd("find /proc/device-tree/ -name '*sml*'")
+        p.cmd("find /proc/device-tree/reserved-memory")
+        p.cmd('hexdump -C /proc/device-tree/vdevice/vtpm*/linux,sml-base')
+        p.cmd('hexdump -C /proc/device-tree/vdevice/vtpm*/linux,sml-size')
+        p.cmd('ls -lh /sys/kernel/security/')
+        p.cmd('ls -lh /sys/kernel/security/tpm0/binary_bios_measurements')
+        p.send('hexdump -C /sys/kernel/security/tpm0/binary_bios_measurements')
+        p.expect('Contents')
+        p.expect_prompt()
+        p.cmd('cat /proc/iomem')
+        p.cmd('ls -dl /proc/device-tree/memory@*')
+        p.cmd('ls -l /mnt/host0')
+        p.cmd('ls -l /mnt/host1')
+        p.cmd('kexec --help')
+
+        cmd = ['kexec -d']
+        if kexec_file:
+            cmd.append('-s')
+
+        if kdump:
+            cmd.append('-p')
+        else:
+            cmd.append('-l')
+
+        cmd.append('--append="memblock=debug"')
+        cmd.append('--initrd /mnt/host1/kexec-rootfs.cpio.gz')
+        cmd.append('/mnt/host0/vmlinux')
+
+        cmd = ' '.join(cmd)
+        p.cmd(cmd)
+
+        p.send('echo status=$?')
+        p.expect('status=0')
+        p.expect_prompt()
+        p.cmd('sync')
+
+        if kdump:
+            p.cmd('echo u > /proc/sysrq-trigger')
+            p.send('echo c > /proc/sysrq-trigger')
+            p.expect('Kernel panic - not syncing: sysrq triggered crash', bug_patterns=[])
+            if not kexec_file:
+                p.expect("I'm in purgatory", bug_patterns=[])
+        else:
+            p.send('kexec -e')
+
+        standard_boot(p, qconf.login, qconf.user, qconf.password)
+        p.send('dmesg | grep -i -e tpm')
+        p.expect('CRQ initialization completed')
+        p.expect_prompt()
+        p.cmd('cat /proc/iomem')
+        p.cmd('ls -lh /sys/kernel/security/tpm0/binary_bios_measurements')
+        p.send('hexdump -C /sys/kernel/security/tpm0/binary_bios_measurements')
+        p.expect('Contents')
+        p.expect_prompt()
+        return True
+
+    qconf.callbacks.append(test)
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    rc = 0
+
+    # Pass without patches
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=256M memblock=debug')
+
+#    rc |= test_harness(test, 'tpm', cpu='power8', machine='pseries',
+#                       crashk='crashkernel=255M memblock=debug')
+
+    # Fails without patches
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=255M memblock=debug', kdump=True)
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=255M memblock=debug')
+
+    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+                       crashk='memblock=debug', kexec_file=False)
+
+    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+                       crashk='memblock=debug', kexec_file=True)
+
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=2G-4G:384M,4G-16G:1G,16G-64G:2G,64G-128G:2G,128G-:4G memblock=debug', kdump=True)
+#
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=2G-4G:384M,4G-16G:1G,16G-64G:2G,64G-128G:2G,128G-:4G memblock=debug')
+
+
+#    # 2MB sml lands at 763MB, 250M at 512M ends before the sml region
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=250M@512M memblock=debug')
+#
+#    # 2MB sml lands at 763MB, 251M at 512M is adjacent to the sml region
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=251M@512M memblock=debug')
+#
+#    # 2MB sml lands at 763MB, 252M at 512M overlaps it by 1MB
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=252M@512M memblock=debug')
+#
+#    # 2MB sml lands at 763MB, 256M at 512M overlaps it entirely
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=256M@512M memblock=debug')
+#
+#    # 2MB sml lands at 763MB, 256M at 256M misses it entirely
+#    rc |= test_harness(test, 'tpm', cpu='power9', machine='pseries',
+#                       crashk='crashkernel=256M@256M memblock=debug')
+
+    return rc
+
+
+sys.exit(0 if main() else 1)

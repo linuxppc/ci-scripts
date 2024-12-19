@@ -1,0 +1,254 @@
+#!/usr/bin/python3
+#
+# Test that CPU hotplug minimally works and doesn't pop any warnings in dmesg
+
+import os
+import sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main, kvm_or_tcg
+from utils import setup_logging, test_harness
+from pexpect_utils import xmon_enter, xmon_exit
+from random import randrange
+
+
+def test(name, machine, threads_per_core, nosmt=None):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.smp = f'{threads_per_core * 2},threads={threads_per_core}'
+    qconf.host_mounts = []
+
+    if machine == 'pc':
+        qconf.qemu_path = 'qemu-system-x86_64'
+        qconf.initrd = 'x86_64-rootfs.cpio.gz'
+        qconf.cmdline += 'console=ttyS0 cpu0_hotplug '
+        qconf.vmlinux = 'arch/x86/boot/bzImage'
+        qconf.cpu = 'Skylake-Server-v5'
+        qconf.accel = 'tcg'
+    else:
+        qconf.cpu = 'POWER9'
+        qconf.accel = kvm_or_tcg(machine, qconf.cpu)
+
+    if nosmt:
+        qconf.cmdline += nosmt
+
+    qconf.callback = lambda p: Test(p, machine, threads_per_core, nosmt).test()
+    qconf.apply_defaults()
+
+    return qemu_main(qconf)
+
+
+class Test:
+    def __init__(self, p, machine, threads_per_core, nosmt):
+        self.p = p
+        self.threads_per_core = threads_per_core
+        self.nosmt = nosmt
+        self.machine = machine
+
+    def check_smt_control(self, expected):
+        self.p.send('grep -H . /sys/devices/system/cpu/smt/control')
+        self.p.expect(f'/sys/devices/system/cpu/smt/control:{expected}')
+        self.p.expect_prompt()
+
+    def check_online_cpus(self, level, cores):
+        self.p.send('grep -H . /sys/devices/system/cpu/online')
+
+        if level == self.threads_per_core or self.threads_per_core == 1:
+            upper = cores * self.threads_per_core - 1
+            if upper:
+                expected = f'0-{upper}'
+            else:
+                expected = '0'
+        elif level <= 1:
+            l = []
+            for core in range(0, cores):
+                l.append(f'{core * self.threads_per_core}')
+            expected = ','.join(l)
+        else:
+            l = []
+            for core in range(0, cores):
+                l.append(f'{core * self.threads_per_core}-{core * self.threads_per_core + level - 1}')
+            expected = ','.join(l)
+
+        self.p.expect(expected)
+        self.p.expect_prompt()
+
+    def check_smt_active(self, level):
+        if self.threads_per_core == 1 or level <= 1:
+            expected = 0
+        else:
+            expected = 1
+
+        self.p.send('grep -H . /sys/devices/system/cpu/smt/active')
+        self.p.expect(f'/sys/devices/system/cpu/smt/active:{expected}')
+        self.p.expect_prompt()
+
+    def check_smt(self, level, cores=2, forcedoff=False):
+        print(f"Checking for SMT{level}")
+        if self.threads_per_core == 1:
+            expected = 'notsupported'
+        elif forcedoff:
+            expected = 'forceoff'
+            level = 0
+        elif level <= 1:
+            expected = 'off'
+        elif level == self.threads_per_core:
+            expected = 'on'
+        else:
+            expected = level
+
+        self.check_smt_control(expected)
+        self.check_online_cpus(level, cores)
+        self.check_smt_active(level)
+        print(f"OK SMT{level} ({expected})")
+
+    def set_smt(self, level, forcedoff=False):
+        if level == 1 and randrange(0, 2):
+            # Half the time use "off" as a synonym for 1 thread
+            val = 'off'
+        elif level == self.threads_per_core and randrange(0, 2):
+            # Half the time use "on" as a synonym for all threads
+            val = 'on'
+        else:
+            val = level
+
+        self.p.send(f'echo {val} > /sys/devices/system/cpu/smt/control')
+        if self.threads_per_core == 1:
+            self.p.expect('write error: No such device')
+        elif forcedoff:
+            self.p.expect('write error: Operation not permitted')
+        elif level == 0:
+            self.p.expect('write error: Invalid argument')
+
+        self.p.expect_prompt()
+
+    def set_and_check_smt(self, level):
+        self.set_smt(level)
+        if self.threads_per_core == 1:
+            self.check_smt(1)
+        elif level == 0:
+            pass
+        else:
+            self.check_smt(level)
+
+    def random_smt_level(self):
+        return randrange(0, self.threads_per_core + 1, 1)
+
+    def check_offline(self, cpus):
+        self.p.cmd('grep -H . /sys/devices/system/cpu/online')
+        self.p.cmd('grep -H . /sys/devices/system/cpu/possible')
+        self.p.cmd('grep -H . /sys/devices/system/cpu/present')
+        for cpu in cpus:
+            self.p.send(f'grep -H . /sys/devices/system/cpu/cpu{cpu}/online')
+            self.p.expect(f'/sys/devices/system/cpu/cpu{cpu}/online:0')
+            self.p.expect_prompt()
+
+    def dlpar_tests(self):
+        # Do DLPAR tests
+        self.p.cmd(f"drc_index=0x$(od -A none -t x1 /proc/device-tree/cpus/PowerPC,*@{self.threads_per_core}/ibm,my-drc-index | tr -d ' ')")
+        self.p.cmd('echo "DRC index is $drc_index"')
+
+        prev_level = self.threads_per_core
+        self.set_smt(prev_level)
+
+        for i in range(0, 10):
+            level = self.random_smt_level()
+            self.set_and_check_smt(level)
+
+            if level == 0:
+                level = prev_level
+
+            self.p.cmd('nproc')
+            self.p.cmd('echo -n "cpu remove index $drc_index" > /sys/kernel/dlpar')
+            self.check_smt(level, cores=1)
+            self.check_offline(range(self.threads_per_core, self.threads_per_core + 1))
+            self.p.cmd('nproc')
+
+            self.p.cmd('echo -n "cpu add index $drc_index" > /sys/kernel/dlpar')
+            self.p.cmd('nproc')
+
+            self.check_smt(level)
+            prev_level = level
+
+    def test_forceoff(self):
+        # Check forceoff works
+        for i in range(0, 10):
+            n = self.random_smt_level()
+            self.set_smt(n, forcedoff=True)
+            self.check_smt(n, forcedoff=True)
+
+    def test(self):
+        if self.nosmt == 'nosmt=force':
+            self.test_forceoff()
+            return
+        elif self.nosmt:
+            # Check SMT starts off disabled
+            self.check_smt(1)
+        else:
+            # Check everything is online
+            self.check_smt(self.threads_per_core)
+
+        # Do the obvious state transitions
+        # on -> off
+        self.set_smt('off')
+        self.check_smt(1)
+
+        # off -> on
+        self.set_smt('on')
+        self.check_smt(self.threads_per_core)
+
+        # on -> on (nop)
+        self.set_smt('on')
+        self.check_smt(self.threads_per_core)
+
+        # on -> off (using '1')
+        self.set_and_check_smt(1)
+
+        # off -> on (using threads_per_core)
+        self.set_and_check_smt(self.threads_per_core)
+
+        if self.threads_per_core == 8:
+            # Check that 4 -> off -> on gives us 8 threads
+            self.set_and_check_smt(4)
+            self.set_smt('off')
+            self.check_smt(1)
+            self.set_smt('on')
+            self.set_and_check_smt(8)
+
+        # Do 50 transitions to/from random levels
+        for i in range(0, 50):
+            n = self.random_smt_level()
+            self.set_and_check_smt(n)
+
+        if self.machine == 'pseries':
+            self.dlpar_tests()
+
+        # Go back to all threads online
+        self.set_and_check_smt(self.threads_per_core)
+
+        self.set_smt('forceoff')
+        self.test_forceoff()
+
+        return
+
+
+def main(args):
+    setup_logging()
+
+    if '--x86' in args:
+        rc  = test_harness(test, 'cpu_smt', machine='pc', threads_per_core=2)
+        rc |= test_harness(test, 'cpu_smt', machine='pc', threads_per_core=1)
+        rc |= test_harness(test, 'cpu_smt', machine='pc', threads_per_core=2, nosmt='nosmt')
+        rc |= test_harness(test, 'cpu_smt', machine='pc', threads_per_core=2, nosmt='nosmt=force')
+    else:
+        rc  = test_harness(test, 'cpu_smt', machine='pseries', threads_per_core=1)
+        rc |= test_harness(test, 'cpu_smt', machine='pseries', threads_per_core=4)
+        rc |= test_harness(test, 'cpu_smt', machine='pseries', threads_per_core=8)
+        rc |= test_harness(test, 'cpu_smt', machine='pseries', threads_per_core=8, nosmt='nosmt')
+        rc |= test_harness(test, 'cpu_smt', machine='pseries', threads_per_core=8, nosmt='nosmt=force')
+
+    return rc
+
+
+sys.exit(0 if main(sys.argv[1:]) else 1)

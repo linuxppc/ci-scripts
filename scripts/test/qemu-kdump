@@ -1,0 +1,130 @@
+#!/usr/bin/python3
+#
+# Test that kdump works
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main
+from pexpect_utils import standard_boot
+from utils import setup_logging, test_harness
+from random import choice
+import atexit
+
+
+def test(name, cpu, machine, cores, smt, nr_cpus):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '4G'
+    total_cpus = cores * smt
+    qconf.smp = f'{total_cpus},threads={smt}'
+    qconf.cpu = cpu
+    qconf.accel = 'kvm'
+
+    # We need kexec
+    qconf.initrd = 'kexec-rootfs.cpio.gz'
+    qconf.login = True
+    qconf.password = 'linuxppc'
+    qconf.prompt = '# '
+
+    vmlinux_dir = os.path.dirname(qconf.vmlinux)
+    qconf.host_mounts.append(vmlinux_dir)
+    qconf.host_mounts.append(qconf.root_disk_path)
+
+    qconf.cmdline.append('crashkernel=768M@256M')
+
+    def test(qconf, p):
+        #p.cmd('ls -l /mnt/host0')
+        #p.cmd('ls -l /mnt/host1')
+        p.cmd(f'kexec -p --append=nr_cpus={nr_cpus} --initrd /mnt/host1/kexec-rootfs.cpio.gz /mnt/host0/vmlinux')
+        #p.cmd('grep -H . /sys/devices/system/cpu/*/physical_id')
+
+        if nr_cpus < total_cpus:
+            cpu_range = range(nr_cpus, total_cpus)
+        else:
+            cpu_range = range(0, total_cpus)
+
+        online_cpu = choice(cpu_range)
+        p.cmd(f"echo 'Boot CPU will be {online_cpu}'")
+        for cpu in range(0, total_cpus):
+            if cpu == online_cpu:
+                continue
+            # Argh, no taskset
+            p.cmd(f'echo 0 > /sys/devices/system/cpu/cpu{cpu}/online')
+
+        p.cmd('sync')
+        p.cmd('echo u > /proc/sysrq-trigger')
+        p.send('echo c > /proc/sysrq-trigger')
+        p.expect("I'm in purgatory", bug_patterns=[])
+
+        standard_boot(p, qconf.login, qconf.user, qconf.password)
+
+        expected_nr_cpus = (nr_cpus + smt - 1) & (~(smt - 1))
+
+        p.cmd(f"echo 'Online CPU was {online_cpu}'")
+        p.cmd(f"echo 'Expected nr_cpus {expected_nr_cpus}'")
+
+        p.send('grep processor /proc/cpuinfo')
+        for cpu in range(0, expected_nr_cpus):
+            p.expect(r'processor\s+: ' + f'{cpu}')
+        p.expect_prompt()
+
+        if expected_nr_cpus == 1:
+            expected = '0'
+        else:
+            expected = f'0-{expected_nr_cpus-1}'
+            
+        p.send('grep -H . /sys/devices/system/cpu/possible')
+        p.expect(f'/sys/devices/system/cpu/possible:{expected}')
+        p.expect_prompt()
+
+        p.send('grep -H . /sys/devices/system/cpu/present')
+        p.expect(f'/sys/devices/system/cpu/present:{expected}')
+        p.expect_prompt()
+
+        p.send('grep -H . /sys/devices/system/cpu/online')
+        p.expect(f'/sys/devices/system/cpu/online:{expected}')
+        p.expect_prompt()
+
+        if online_cpu >= expected_nr_cpus:
+            expected = int(online_cpu / smt) * smt
+        else:
+            expected = 0
+
+        for cpu in range(0, smt):
+            p.send(f'grep -H . /sys/devices/system/cpu/cpu{cpu}/physical_id')
+            p.expect(f'/sys/devices/system/cpu/cpu{cpu}/physical_id:{expected}')
+            p.expect_prompt()
+            print(f"Found expected output for cpu {cpu}")
+            expected += 1
+
+        for cpu in range(smt, expected_nr_cpus):
+            p.send(f'grep -H . /sys/devices/system/cpu/cpu{cpu}/physical_id')
+            p.expect(f'/sys/devices/system/cpu/cpu{cpu}/physical_id:{cpu}')
+            p.expect_prompt()
+            print(f"Found expected output for cpu {cpu}")
+
+        return True
+
+    qconf.callbacks.append(test)
+    qconf.apply_defaults()
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    rc = 0
+    for cores in [1,2,3,4]:
+        for smt in [1,2,4,8]:
+            for nr_cpus in range(1, cores*smt + 1):
+                rc |= test_harness(test, 'kdump', cpu='power9', machine='pseries', cores=cores, smt=smt, nr_cpus=nr_cpus)
+
+    return rc
+
+
+sys.exit(0 if main() else 1)

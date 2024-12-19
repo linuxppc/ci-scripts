@@ -1,0 +1,69 @@
+#!/usr/bin/python3
+#
+# Test that syscall tracepoints work
+
+import os
+import sys
+import logging
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+
+from qemu import QemuConfig, qemu_main
+from pexpect_utils import standard_boot
+from utils import setup_logging, test_harness
+
+
+def test(name, cpu, machine, crashk):
+    qconf = QemuConfig(machine)
+    qconf.configure_from_env()
+    qconf.net_tests = False
+    qconf.mem = '2G'
+    qconf.smp = 1
+    qconf.cpu = cpu
+
+    # We need kexec
+    qconf.initrd = 'kexec-rootfs.cpio.gz'
+    qconf.login = True
+    qconf.password = 'linuxppc'
+    qconf.prompt = '# '
+
+    vmlinux_dir = os.path.dirname(qconf.vmlinux)
+    qconf.host_mounts.append(vmlinux_dir)
+    qconf.host_mounts.append(qconf.root_disk_path)
+
+    qconf.cmdline.append(crashk)
+
+    qconf.apply_defaults()
+
+    def test(qconf, p):
+        p.cmd('cat /proc/iomem')
+        p.cmd('ls -l /mnt/host0')
+        p.cmd('ls -l /mnt/host1')
+        p.cmd('kexec --help')
+        #p.cmd('kexec -s -p --append="memblock=debug" --initrd /mnt/host1/kexec-rootfs.cpio.gz /mnt/host0/vmlinux')
+        p.cmd('kexec -s --initrd /mnt/host1/kexec-rootfs.cpio.gz /mnt/host0/vmlinux')
+        p.send('echo status=$?')
+        p.expect('status=0')
+        p.expect_prompt()
+        p.cmd('sync')
+        p.cmd('echo u > /proc/sysrq-trigger')
+        p.send('kexec -e')
+        standard_boot(p, qconf.login, qconf.user, qconf.password)
+        return True
+
+    qconf.callbacks.append(test)
+
+    return qemu_main(qconf)
+
+
+def main():
+    setup_logging()
+
+    rc = 0
+
+    rc |= test_harness(test, 'kexec', cpu='power9', machine='powernv',
+                       crashk='crashkernel=256M@512M')
+
+    return rc
+
+
+sys.exit(0 if main() else 1)
