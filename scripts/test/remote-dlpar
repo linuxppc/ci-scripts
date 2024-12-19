@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -o pipefail
+
+hostname=$1
+
+if [[ $hostname != *@* ]]; then
+    hostname="root@$hostname"
+fi
+
+script_base=$(realpath $(dirname $0))
+
+DEST_DIR=/var/tmp/ngci
+timeout -v 1m rsync -azL --rsync-path="mkdir -p $DEST_DIR && rsync" \
+        "$script_base/dlpar" "$hostname:$DEST_DIR/"
+
+if [[ $? -ne 0 ]]; then
+    echo "Failed rsyncing test to $hostname!" >&2
+    exit 1
+fi
+
+timeout -v -k 30s 1h ssh $hostname <<EOF | tee test.log
+set -$-
+echo -n "-> Running on: "
+uname -a
+echo 'ngci: dlpar test starting' > /dev/kmsg
+cd /var/tmp/ngci/
+./dlpar
+echo 'ngci: dlpar test finishing' > /dev/kmsg
+echo "-> Finished OK"
+EOF
+
+rc=$?
+
+if [[ $rc -eq 0 ]]; then
+    echo "OK"
+else
+    echo "Error: Something failed!"
+fi
+
+exit $rc

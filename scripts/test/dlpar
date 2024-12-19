@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+from glob import glob
+from subprocess import run
+from random import randint
+
+
+def main(args):
+    print('Kernel version: ', end=None)
+    run(['uname', '-a'], check=True)
+
+    rc = True
+    rc &= memory_dlpar()
+    rc &= cpu_dlpar()
+
+    if rc:
+        print('Finished test OK')
+
+    return rc
+
+
+def memory_dlpar():
+    print('========================================')
+    print(' Memory')
+    print('========================================')
+    run(['free'])
+
+    print('Offlining memory ...')
+    if not dlpar_write('memory remove count 100'):
+        print('Error: failed removing memory')
+        return False
+
+    run(['free'])
+    print('-> Onlining memory ...')
+    if not dlpar_write('memory add count 100'):
+        print('Error: failed adding memory')
+        return False
+
+    print('Offlining until failure ...')
+    i = 0
+    while True:
+        if not dlpar_write('memory remove count 10'):
+            break
+
+        i += 1
+
+    print(f'Removed {i*10} LMBs before failure')
+
+    print(f'Onlining {i} x 10 LMBs')
+    while i > 0:
+        if not dlpar_write('memory add count 10'):
+            print('Error onlining LMBs?')
+
+        i -= 1
+
+    return True
+
+
+def cpu_dlpar():
+    print('========================================')
+    print(' CPUs')
+    print('========================================')
+
+    nproc = int(run(['nproc'], capture_output=True, check=True).stdout)
+    print(f'nproc before: {nproc}')
+
+    # FIXME detect this for P9 LPAR
+    threads_per_core = 8
+    # Offline all but 1 core
+    num_cores = int((nproc / threads_per_core) - 1)
+
+    drcs = lookup_drcs(num_cores, nproc, threads_per_core)
+    if not drcs:
+        return False
+
+    for i in range(0, 11):
+        expected = nproc - (num_cores * threads_per_core)
+        if not cpu_dlpar_once(num_cores, nproc, expected, drcs):
+            return False
+
+        num_cores = randint(1, 7)
+
+        if i == 0:
+            print('Doing loop to stress refcounting ...')
+
+    return True
+
+
+def cpu_dlpar_once(num_cores, nproc_before, expected, drcs):
+    def repair():
+        print("Trying to re-online cores ...")
+        for drc in drcs:
+            dlpar_write(f'cpu add index 0x{drc:x}')
+
+    print(f'Removing {num_cores} cores ...')
+    for i in range(0, num_cores):
+        drc = drcs[i]
+        if not dlpar_write(f'cpu remove index 0x{drc:x}'):
+            print(f'Error: failed DLPAR removing {i}th core with drc 0x{drc:x}')
+            repair()
+            return False
+
+    nproc_after = int(run(['nproc'], capture_output=True, check=True).stdout)
+    print(f'nproc after offline: {nproc_after}')
+
+    if nproc_after != expected:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print(f' Error: nproc != {expected} after offlining?!')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        repair()
+        return False
+
+    print(f'Onlining {num_cores} cores ...')
+
+    for i in range(0, num_cores):
+        drc = drcs[i]
+        if not dlpar_write(f'cpu add index 0x{drc:x}'):
+            print(f'Error: failed DLPAR adding {i}th core with drc 0x{drc:x}, continuing')
+
+    nproc_after = int(run(['nproc'], capture_output=True, check=True).stdout)
+    print(f'nproc after online: {nproc_after}')
+
+    if nproc_after != nproc_before:
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print(f' Error: nproc != {nproc_before} after onlining?!')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        return False
+
+    return True
+
+
+def lookup_drcs(num_cores, nproc, threads_per_core):
+    # Skip core 0, it sometimes fails removal
+    i = threads_per_core
+    drcs = []
+    while len(drcs) < num_cores and i < nproc:
+        path = f'/proc/device-tree/cpus/*@{i:x}/ibm,my-drc-index'
+
+        i += threads_per_core
+
+        matches = glob(path)
+        if not len(matches):
+            continue
+
+        path = matches[0]
+        p = run(f'od -A none -t x1 {path}'.split(), capture_output=True, check=True)
+        drc = p.stdout.decode('utf-8').strip()
+        drc = drc.replace(' ', '')
+        drc = int(drc, 16)
+        drcs.append(drc)
+
+    if len(drcs) != num_cores:
+        print(f'Error: unable to find enough DRCs? Got {len(drcs)}')
+        return None
+
+    return drcs
+
+
+def dlpar_write(s, warn=True):
+    try:
+        f = open('/sys/kernel/dlpar', 'w')
+        f.write(s)
+        f.close()
+    except Exception as e:
+        print(f"DLAPR write of '{s}' failed with '{e}'")
+        return False
+    else:
+        return True
+
+
+sys.exit(0 if main(sys.argv[1:]) else 1)
