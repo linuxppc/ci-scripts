@@ -164,7 +164,7 @@ elif [[ "$1" == "docs" ]]; then
 elif [[ "$1" == "perf" ]]; then
     cmd="make $quiet -C tools/perf O=/output"
 
-    if [[ $(uname -m) != "ppc64le" ]]; then
+    if [[ $(uname -m) != "ppc64le" || $CROSS_COMPILE == "powerpc64-linux-gnu-" ]]; then
         cmd+=" NO_LIBELF=1 NO_LIBTRACEEVENT=1"
     fi
 
