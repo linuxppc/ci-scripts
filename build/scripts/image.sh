@@ -27,10 +27,8 @@ elif [[ "$distro" == "korg" ]]; then
     # Use an older distro for the 5.x toolchains.
     if [[ "$version" == 5.* ]]; then
         from="public.ecr.aws/docker/library/ubuntu:16.04"
-    elif [[ "$version" == 13.* ]]; then
-        from="public.ecr.aws/ubuntu/ubuntu:23.04"
     else
-        from="public.ecr.aws/ubuntu/ubuntu:20.04"
+        from="public.ecr.aws/ubuntu/ubuntu:24.04"
     fi
 elif [[ "$distro" == "ubuntu" && "$version" == 16.* ]]; then
     from="public.ecr.aws/docker/library/ubuntu:16.04"
