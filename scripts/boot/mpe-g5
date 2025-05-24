@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+name = 'mpe-g5'
+
+# The machine has no power control or console, so it has to be manually powered
+# on and booted, so that the script can then SSH in to reboot it.
+b = BasicBoot(name, NoXcat(),
+              image_dest=f'netboot:/srv/tftp/{name}/vmlinux.dev')
+sys.exit(b.boot_main(sys.argv[1:]))

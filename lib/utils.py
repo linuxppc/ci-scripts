@@ -150,7 +150,7 @@ def test_harness(func, name, *args, **kwargs):
     return rc
 
 
-def filter_log_warnings(infile, outfile):
+def filter_log_warnings(infile, outfile, extra_patterns=[]):
     from configparser import ConfigParser
     import re
 
@@ -169,6 +169,7 @@ def filter_log_warnings(infile, outfile):
     strings  = [t[1] for t in parser.items('strings', [])]
     patterns = [t[1] for t in parser.items('patterns', [])]
     patterns = [re.compile(p) for p in patterns]
+    patterns.extend(extra_patterns)
 
     def suppress(line):
         for suppression in suppressions:

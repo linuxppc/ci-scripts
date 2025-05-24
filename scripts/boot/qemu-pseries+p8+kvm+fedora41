@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec "$(dirname "$0")"/qemu-pseries --accel kvm --cpu POWER8 --cloud-image fedora41-cloudimg-ppc64le.qcow2 "$@"

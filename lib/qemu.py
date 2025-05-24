@@ -381,8 +381,12 @@ class QemuConfig:
         elif 'fedora34' in self.cloud_image or 'debian' in self.cloud_image:
             self.cmdline.insert(0, f'root=/dev/vd{cloud_drive}2')
         elif 'fedora' in self.cloud_image:
+            if 'fedora39' in self.cloud_image:
+                partition = 5
+            else:
+                partition = 3
             self.cmdline.insert(0, 'systemd.mask=hcn-init.service systemd.hostname=fedora')
-            self.cmdline.insert(0, f'root=/dev/vd{cloud_drive}5 rootfstype=btrfs rootflags=subvol=root')
+            self.cmdline.insert(0, f'root=/dev/vd{cloud_drive}{partition} rootfstype=btrfs rootflags=subvol=root')
 
     def __set_spectre_v2_caps(self):
         try:

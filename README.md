@@ -78,6 +78,8 @@ There are images for various toolchains, they are encoded in the distro name/ver
  - `ubuntu@20.04`: Ubuntu 20.04, gcc 9.4.0, binutils 2.34
  - `ubuntu@18.04`: Ubuntu 18.04, gcc 7.5.0, binutils 2.30
  - `ubuntu@16.04`: Ubuntu 16.04, gcc 5.4.0, binutils 2.26.1
+ - `fedora@42`: Fedora 42, gcc 15.1.1, binutils 2.44-1, clang 20.1.3
+ - `fedora@41`: Fedora 41, gcc 14.2.1, binutils 2.43.1-2, clang 19.1.7
  - `fedora@40`: Fedora 40, gcc 14.0.1, binutils 2.41-34, clang 18.1.1
  - `fedora@39`: Fedora 39, gcc 13.2.1, binutils 2.40-14, clang 17.0.6
  - `fedora@38`: Fedora 38, gcc 12.2.1, binutils 2.39-3, clang 16.0.2
@@ -129,6 +131,8 @@ To only run sparse on files being recompiled, pass `SPARSE=1`.
 To build modules pass `MODULES=1`
 
 To convert all modules to builtin, pass `MOD2YES=1`.
+
+To build with llvm pass `LLVM=1`, only works using the latest Fedora or Ubuntu image.
 
 To build with clang pass `CLANG=1`, only works using the latest Fedora or Ubuntu image.
 

@@ -290,6 +290,7 @@ def full_compile_test(args, suite=None):
         k('powernv_defconfig', image, merge_config=cfgs)
         # CELL
         k('cell_defconfig', image, merge_config=cell_configs)
+        k('ps3_defconfig', image)
         # POWERNV, some shrinking/hardening options
         k('skiroot_defconfig', image)
         # PPC_86xx (BOOK3S_32)
@@ -386,4 +387,158 @@ def qemu_kasan(args, suite=None):
         #b('qemu-pseries+p9+kvm+hpt+fedora34+kasan', 'ppc64le_guest_defconfig', image,
         #  script='qemu-pseries+p9+kvm+fedora34', tests=[test], cmdline='disable_radix')
 
+    return suite
+
+
+def qemu_selftests(args):
+    suite = TestSuite('qemu-selftests')
+    k = suite.add_kernel
+    b = suite.add_qemu_boot
+
+    image = 'fedora'
+
+    for arch in ['ppc64', 'ppc64le']:
+        k(f'{arch}_guest_defconfig',  image, merge_config=guest_configs)
+        selftests = suite.add_selftest('ubuntu@20.04', arch)
+
+        exclude = []
+        # Not clear what causes failure
+        exclude.append('powerpc/pmu/ebb:instruction_count_test')
+        exclude.append('powerpc/pmu/ebb:fork_cleanup_test')
+        # Confused by qemu
+        exclude.append('powerpc/security:rfi_flush')
+        exclude.append('powerpc/security:entry_flush')
+        exclude.append('powerpc/security:uaccess_flush')
+        exclude.append('powerpc/security:spectre_v2')
+        # Slow and not that useful for bug finding
+        exclude.append('powerpc/benchmarks:context_switch')
+        exclude.append('powerpc/benchmarks:fork')
+        exclude.append('powerpc/benchmarks:futex_bench')
+        exclude.append('powerpc/benchmarks:mmap_bench')
+        # Tends to timeout
+        exclude.append('powerpc/signal:sigfuz')
+        # Requires certain hardware
+        exclude.append('powerpc/eeh:eeh-basic.sh')
+
+        if arch == 'ppc64le':
+            tests = [QemuSelftestsConfig(selftests, 'powerpc.*', exclude=exclude)]
+            name = 'qemu-pseries+p9+kvm+fedora41'
+            b(name, f'{arch}_guest_defconfig', image, tests=tests)
+        else:
+            # 64-bit tests don't work due to missing libraries
+            exclude.append('powerpc/stringloops:.*')
+            exclude.append('powerpc/copyloops:.*')
+            exclude.append('powerpc/tm:.*')
+            exclude.append('powerpc/pmu.*')
+            exclude.append('powerpc/mm:.*')
+            exclude.append('powerpc/math:.*')
+            exclude.append('powerpc/ptrace:.*')
+            exclude.append('powerpc/papr_sysparm:papr_sysparm')
+            exclude.append('powerpc/switch_endian:switch_endian_test')
+            exclude.append('powerpc/vphn:test-vphn')
+            tests = [QemuSelftestsConfig(selftests, 'powerpc.*', exclude=exclude)]
+            name = 'qemu-pseries+p9+kvm+be+debian'
+            b(name, f'{arch}_guest_defconfig', image, tests=tests)
+
+    return suite
+
+
+def std_boot(args, hostname, defconfig, merge_configs, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite(hostname)
+
+    for image in images:
+        suite.add_kernel(defconfig, image, merge_config=merge_configs)
+        suite.add_boot(hostname, defconfig, image)
+
+    return suite
+
+
+def std_boot_and_test(args, hostname, defconfig, merge_configs, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite(hostname)
+
+    ppctests = suite.add_selftest('ubuntu@24.04', 'ppc64le', 'ppctests')
+
+    exclude = []
+    # Tends to timeout
+    exclude.append('powerpc/signal:sigfuz')
+    # Requires certain hardware
+    exclude.append('powerpc/eeh:eeh-basic.sh')
+    # Not always reliable depending on firmware settings etc.
+    exclude.append('powerpc/security:spectre_v2')
+    # Flakey
+    exclude.append('powerpc/pmu:count_stcx_fail')
+
+    tests = [SelftestsConfig(ppctests, 'powerpc', exclude)]
+
+    for image in images:
+        suite.add_kernel(defconfig, image, merge_config=merge_configs)
+        suite.add_boot(hostname, defconfig, image, tests=tests)
+
+    return suite
+
+
+def ltcppm1(args, suite=None):
+    return std_boot(args, 'ltcppm1.aus.stglabs.ibm.com', 'powernv_defconfig', powernv_configs,  suite)
+
+def ltcppm2(args, suite=None):
+    return std_boot(args, 'ltcppm2.aus.stglabs.ibm.com', 'ppc64le_guest_config', guest_configs,  suite)
+
+def ltcppm3(args, suite=None):
+    return std_boot_and_test(args, 'ltcppm3.aus.stglabs.ibm.com', 'powernv_defconfig', powernv_configs, suite)
+
+
+def ppm_hw_boots(args):
+    suite = TestSuite('ppm-hw-boots')
+    ltcppm1(args, suite)
+    ltcppm2(args, suite)
+    ltcppm3(args, suite)
+    return suite
+
+
+def t4240rdb(args, suite=None):
+    images = args.images
+    if not images:
+        images = [DEFAULT_NEW_IMAGE]
+
+    if suite is None:
+        suite = TestSuite('t4240rdb')
+
+    for image in images:
+        suite.add_kernel('corenet64_smp_defconfig+e6500',  image, merge_config=corenet64_configs + ['e6500-y', 'altivec-y'])
+        suite.add_boot('t4240rdb', 'corenet64_smp_defconfig+e6500', image)
+
+    # XXX Can't run selftests because Void userspace is BE ELFv2
+    # Need to build the tests with a matching toolchain.
+
+    return suite
+
+
+def didgo5(args, suite=None):
+    return std_boot(args, 'didgo5', 'ppc64_guest_defconfig+legacy', legacy_guest_configs, suite)
+
+
+def mpe_g5(args, suite=None):
+    return std_boot(args, 'mpe-g5', 'g5_defconfig', g5_configs, suite)
+
+
+def spork(args, suite=None):
+    return std_boot_and_test(args, 'spork', 'powernv_defconfig', powernv_configs, suite)
+
+
+def oz_hw_boots(args):
+    suite = TestSuite('oz-hw-boots')
+    t4240rdb(args, suite)
+    didgo5(args, suite)
+    mpe_g5(args, suite)
+    spork(args, suite)
     return suite

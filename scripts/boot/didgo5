@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+name = 'didgo5'
+b = BasicBoot(name, OzXcat(name),
+              image_dest=f'netboot:/srv/tftp/{name}/zImage.dev',
+              image_src='zImage')
+sys.exit(b.boot_main(sys.argv[1:]))

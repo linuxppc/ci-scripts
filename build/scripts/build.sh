@@ -173,6 +173,10 @@ if [[ "$task" == "kernel" ]]; then
     if [[ -n "$LLVM_IAS" ]]; then
         cmd+="-e LLVM_IAS=$LLVM_IAS "
     fi
+
+    if [[ -n "$LLVM" ]]; then
+        cmd+="-e LLVM=$LLVM "
+    fi
 fi
 
 if [[ "$task" == "ppctests" ]]; then

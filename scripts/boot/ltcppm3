@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+
+import os, sys
+sys.path.append(f'{os.path.dirname(sys.argv[0])}/../../lib')
+from boot_utils import *
+
+xcat = PpmXcat('ltcppm3')
+b = PowernvBoot('ltcppm3.aus.stglabs.ibm.com', xcat,
+		'loglevel=7 nosplash root=PARTUUID=9bd52ffe-03',
+                '/srv/images/ltcppm3.aus.stglabs.ibm.com/vmlinux.dev',
+		'ltcppm4.aus.stglabs.ibm.com')
+sys.exit(b.boot_main(sys.argv[1:]))

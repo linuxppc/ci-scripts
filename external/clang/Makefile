@@ -27,9 +27,10 @@ $(eval $(call TEMPLATE,14.0.6,8.4))
 $(eval $(call TEMPLATE,15.0.7,8.4))
 $(eval $(call TEMPLATE,16.0.6,8.7))
 $(eval $(call TEMPLATE,17.0.4,8.8))
+$(eval $(call TEMPLATE,18.1.8,8.8))
 
-# Only download clang-17 by default
-download: llvm-17.0.4
+# Only download clang-18 by default
+download: llvm-18.1.8
 
 prepare: download
 

@@ -10,7 +10,7 @@ echo "## ARCH          = $ARCH"
 echo "## CROSS_COMPILE = $CROSS_COMPILE"
 echo "## gcc           = $gcc_version"
 
-if [[ -n "$CLANG" ]]; then
+if [[ -n "$CLANG" || -n "$LLVM" ]]; then
        clang_version=$(clang --version | head -1)
        echo "## clang         = $clang_version"
 fi
@@ -40,7 +40,7 @@ rc=0
 
 if [[ "$1" == "kernel" ]]; then
     cc="${CROSS_COMPILE}gcc"
-    if [[ -n "$CLANG" ]]; then
+    if [[ -n "$CLANG" || -n "$LLVM" ]]; then
         cc="clang"
     fi
 
@@ -50,8 +50,12 @@ if [[ "$1" == "kernel" ]]; then
 
     cc="CC=$cc"
 
+    if [[ -n "$LLVM" ]]; then
+        llvm="LLVM=1"
+    fi
+
     if [[ -n "$PRE_CLEAN" ]]; then
-        (set -x; make $verbose $quiet "$cc" clean)
+        (set -x; make $verbose $quiet $llvm "$cc" clean)
     fi
 
     if [[ "$DEFCONFIG" == .config* || "$DEFCONFIG" == *.config ]]; then
@@ -61,7 +65,7 @@ if [[ "$1" == "kernel" ]]; then
         # Strip off any suffix after the first '+' used for unique naming
         DEFCONFIG="${DEFCONFIG%%+*}"
         echo "## DEFCONFIG     = $DEFCONFIG"
-        (set -x; make $verbose $quiet "$cc" $DEFCONFIG)
+        (set -x; make $verbose $quiet $llvm "$cc" $DEFCONFIG)
     fi
 
     if [[ -n "$MERGE_CONFIG" ]]; then
@@ -73,13 +77,13 @@ if [[ "$1" == "kernel" ]]; then
         # merge_config.sh always writes its TMP files to $PWD, so we have to
         # change into /output before running it.
         (cd /output; set -x; /linux/scripts/kconfig/merge_config.sh -m .config ${configs[@]})
-        (set -x; make $verbose $quiet "$cc" olddefconfig)
+        (set -x; make $verbose $quiet $llvm "$cc" olddefconfig)
     fi
 
     rc=$?
 
     if [[ -n "$MOD2YES" ]]; then
-        (set -x; make $verbose $quiet "$cc" mod2yesconfig)
+        (set -x; make $verbose $quiet $llvm "$cc" mod2yesconfig)
     fi
 
     if [[ -n "$REPRODUCIBLE" ]]; then
@@ -98,7 +102,7 @@ if [[ "$1" == "kernel" ]]; then
         if [[ -n "$SPARSE" ]]; then
             rm -f /output/sparse.log
             touch /output/sparse.log
-            (set -x; make C=$SPARSE CF=">> /output/sparse.log 2>&1" $verbose $quiet "$cc" -j $JFACTOR)
+            (set -x; make C=$SPARSE CF=">> /output/sparse.log 2>&1" $verbose $quiet $llvm "$cc" -j $JFACTOR)
 
             rc=$?
 
@@ -107,7 +111,7 @@ if [[ "$1" == "kernel" ]]; then
                 rc=$?
             fi
         else
-            (set -x; make $verbose $quiet "$cc" -j $JFACTOR)
+            (set -x; make $verbose $quiet $llvm "$cc" -j $JFACTOR)
             rc=$?
         fi
     fi
@@ -120,7 +124,7 @@ if [[ "$1" == "kernel" ]]; then
             # Clean out any old modules
             rm -rf $mod_path
 
-            (set -x; make $verbose $quiet -j $JFACTOR "$cc" INSTALL_MOD_PATH=$mod_path modules_install)
+            (set -x; make $verbose $quiet -j $JFACTOR $llvm "$cc" INSTALL_MOD_PATH=$mod_path modules_install)
             rc=$?
             if [[ $rc -eq 0 ]]; then
                 tar -cjf /output/modules.tar.bz2 -C $mod_path lib
@@ -144,7 +148,7 @@ if [[ "$1" == "kernel" ]]; then
     fi
 
     if [[ -n "$POST_CLEAN" ]]; then
-        (set -x; make $verbose $quiet "$cc" clean)
+        (set -x; make $verbose $quiet $llvm "$cc" clean)
     fi
 elif [[ "$1" == "docs" ]]; then
     (set -x -o pipefail; make $verbose $quiet -j $JFACTOR htmldocs 2>&1 | tee /output/docs.log)
@@ -160,7 +164,7 @@ elif [[ "$1" == "docs" ]]; then
 elif [[ "$1" == "perf" ]]; then
     cmd="make $quiet -C tools/perf O=/output"
 
-    if [[ $(uname -m) != "ppc64le" ]]; then
+    if [[ $(uname -m) != "ppc64le" || $CROSS_COMPILE == "powerpc64-linux-gnu-" ]]; then
         cmd+=" NO_LIBELF=1 NO_LIBTRACEEVENT=1"
     fi
 
