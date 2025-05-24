@@ -1,6 +1,6 @@
 all: help
 
-export FEDORA_LATEST := 40
+export FEDORA_LATEST := 41
 
 x86 = $(filter x86_64,$(shell uname -m))
 isa_3 = $(filter arch_3_00,$(shell LD_SHOW_AUXV=1 /bin/true))
@@ -16,7 +16,7 @@ endif
 
 UBUNTU_DISTROS += ubuntu@20.04 ubuntu@18.04 ubuntu@16.04 ubuntu
 
-FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@39 fedora@38 fedora@37 fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
+FEDORA_DISTROS := fedora@${FEDORA_LATEST} fedora@40 fedora@39 fedora@38 fedora@37 fedora@36 fedora@35 fedora@34 fedora@33 fedora@31 fedora
 KORG_DISTROS := korg@14.2.0 korg@14.1.0 korg@13.3.0 korg@13.2.0 korg@13.1.0 \
                 korg@12.4.0 korg@12.3.0 korg@12.2.0 korg@12.1.0 korg@11.3.0 \
                 korg@11.1.0 korg@10.3.0 korg@9.4.0 korg@9.3.0 korg@8.5.0 \
