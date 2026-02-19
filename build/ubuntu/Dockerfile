@@ -15,6 +15,7 @@ RUN apt-get -q -y update && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get -q -y install --no-install-recommends \
       bc \
+      bindgen \
       bison \
       bsdmainutils \
       bzip2 \
@@ -22,6 +23,7 @@ RUN apt-get -q -y update && \
       ccache \
       cpio \
       crossbuild-essential-powerpc \
+      curl \
       gcc-multilib-powerpc-linux-gnu \
       dwarves \
       file \
@@ -37,6 +39,8 @@ RUN apt-get -q -y update && \
       libfuse-dev \
       liblz4-tool \
       libssl-dev \
+      lld \
+      llvm \
       lzop \
       make \
       openssl \
@@ -45,11 +49,23 @@ RUN apt-get -q -y update && \
       u-boot-tools \
       rename \
       rsync \
+      rustc \
+      rustfmt \
+      rust-clippy \
+      rust-src \
       sparse \
       xz-utils \
       $(/tmp/packages.sh) && \
     rm -rf /var/lib/apt/lists/* /tmp/packages.sh /var/cache/* /var/log/dpkg.log
-
+ENV RUSTUP_HOME=/opt/rustup
+ENV CARGO_HOME=/opt/cargo
+ENV PATH="/opt/cargo/bin:${PATH}"
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path
+RUN rustup toolchain install nightly-2026-01-28 \
+    && rustup default nightly-2026-01-28 \
+    && rustup component add rust-src --toolchain nightly-2026-01-28 \
+    && cargo install --locked bindgen-cli
 COPY ubuntu/make-links.sh /tmp/make-links.sh
 RUN /tmp/make-links.sh ${compiler_version} && rm /tmp/make-links.sh
 
