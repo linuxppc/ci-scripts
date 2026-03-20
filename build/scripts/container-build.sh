@@ -40,6 +40,12 @@ rc=0
 
 if [[ "$1" == "kernel" ]]; then
     cc="${CROSS_COMPILE}gcc"
+
+    # As rust is supported via LLVM
+    if [[ -n "$RUST" ]]; then
+	LLVM=1
+    fi
+
     if [[ -n "$CLANG" || -n "$LLVM" ]]; then
         cc="clang"
     fi
@@ -66,6 +72,11 @@ if [[ "$1" == "kernel" ]]; then
         DEFCONFIG="${DEFCONFIG%%+*}"
         echo "## DEFCONFIG     = $DEFCONFIG"
         (set -x; make $verbose $quiet $llvm "$cc" $DEFCONFIG)
+    fi
+
+    if [[ -n "$RUST" ]]; then
+        echo "Enabling RUST...!!!"
+        (set -x; make $verbose $quiet $llvm "$cc" rustavailable)
     fi
 
     if [[ -n "$MERGE_CONFIG" ]]; then

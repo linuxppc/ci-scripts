@@ -177,6 +177,10 @@ if [[ "$task" == "kernel" ]]; then
     if [[ -n "$LLVM" ]]; then
         cmd+="-e LLVM=$LLVM "
     fi
+
+    if [[ -n "$RUST" ]]; then
+        cmd+="-e RUST=$RUST "
+    fi
 fi
 
 if [[ "$task" == "ppctests" ]]; then
