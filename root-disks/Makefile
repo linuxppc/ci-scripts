@@ -24,7 +24,7 @@ define wget
 endef
 
 define wget_lbt
-	$(call wget,$(1),"https://github.com/groeck/linux-build-test/blob/8891968937a86214dbddfdbd98e43a0519402a80/rootfs/$(2)?raw=true")
+	$(call wget,$(1),"https://github.com/groeck/linux-build-test/raw/8891968937a86214dbddfdbd98e43a0519402a80/rootfs/$(2)")
 endef
 
 ppc64-rootfs.cpio.gz: ppc64-novsx-rootfs.cpio.gz
