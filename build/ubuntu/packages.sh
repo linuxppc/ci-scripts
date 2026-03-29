@@ -9,7 +9,7 @@ machine=$(uname -m)
 major="${VERSION_ID%%.*}"
 
 if [[ "$major" -ge 21 ]]; then
-    PACKAGES+=" clang llvm"
+    PACKAGES+=" clang llvm lld"
 fi
 
 if [[ "$machine" == "ppc64le" ]]; then
