@@ -8,6 +8,9 @@ set -e
 # Extract major version
 major="${VERSION_ID%%.*}"
 
+# Latest stable Rust release
+RUST_VERSION=1.99.1
+
 # Only install Rust for Ubuntu 24.04 and later
 if [[ "$major" -ge 24 ]]; then
     echo "Installing Rust toolchain for Ubuntu $VERSION_ID..."
@@ -19,15 +22,15 @@ if [[ "$major" -ge 24 ]]; then
 
     # Install rustup
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-        sh -s -- -y --no-modify-path
+        sh -s -- -y --no-modify-path --default-toolchain none
 
     # Source cargo environment
     . "$CARGO_HOME/env"
 
-    # Install nightly toolchain with rust-src component
-    rustup toolchain install nightly \
-        && rustup default nightly \
-        && rustup component add rust-src --toolchain nightly \
+    # Install stable toolchain with rust-src component
+    rustup toolchain install "$RUST_VERSION" \
+        && rustup default "$RUST_VERSION" \
+        && rustup component add rust-src --toolchain "$RUST_VERSION" \
         && cargo install --locked bindgen-cli
 
     # Verify installation
